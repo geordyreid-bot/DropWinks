@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10C50 10 15 45.82 15 62.5C15 79.92 30.67 90 50 90C69.33 90 85 79.92 85 62.5C85 45.82 50 10 50 10ZM58 60C58 66 68 66 68 60Z' fill='%231e293b'/%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#79c4ff" />
+
+    <title>WinkDrops: Anonymously Share Concern & Support</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="WinkDrops lets you anonymously send a 'Wink' to someone you're concerned about. Our AI provides gentle, non-alarming insights and resources to encourage them to seek support.">
+    <meta name="keywords" content="anonymous message, mental health, wellness, support, concern, AI, friends, family, gentle support, self-care">
+    <meta name="author" content="WinkDrops">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="WinkDrops: Anonymously Share Concern & Support">
+    <meta property="og:description" content="Send a gentle, anonymous gesture of concern. WinkDrops uses AI to provide helpful resources, making it easier to show you care.">
+    <meta property="og:image" content="/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="WinkDrops: Anonymously Share Concern & Support">
+    <meta property="twitter:description" content="Send a gentle, anonymous gesture of concern. WinkDrops uses AI to provide helpful resources, making it easier to show you care.">
+    <meta property="twitter:image" content="/og-image.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html, body, #root {
+        height: 100%;
+      }
+      body {
+        font-family: 'Quicksand', sans-serif;
+      }
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(1rem); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes fade-in-up-subtle {
+        from { opacity: 0; transform: translateY(0.5rem); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+       @keyframes pulse-soft {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 0.9;
+        }
+      }
+      @keyframes pulse-gentle {
+        0%, 100% {
+          transform: scale(1);
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        50% {
+          transform: scale(1.03);
+          box-shadow: 0 20px 25px -5px rgba(121, 196, 255, 0.3), 0 10px 10px -5px rgba(121, 196, 255, 0.1);
+        }
+      }
+      @keyframes drop-fall {
+        0% { transform: translateY(-200px) scale(0.8); opacity: 1; }
+        85% { transform: translateY(0) scale(1); opacity: 1; } /* Impact */
+        95% { transform: translateY(5px) scale(1.2, 0.8); opacity: 0.5; } /* Squash and start fade */
+        100% { transform: translateY(5px) scale(1.5, 0.5); opacity: 0; } /* Fully squashed and faded */
+      }
+      @keyframes splash-ripple {
+        0% { transform: scale(0); opacity: 1; }
+        100% { transform: scale(2); opacity: 0; }
+      }
+      @keyframes draw-in {
+        0% { opacity: 1; } /* Make it visible at the start of animation */
+        100% { stroke-dashoffset: 0; opacity: 1; }
+      }
+      @keyframes bounce-slow {
+        0%, 100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        50% {
+            transform: translateY(-12px);
+            opacity: 0.7;
+        }
+      }
+      @keyframes subtle-gradient-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+      }
+      .animate-fade-in-up {
+        animation: fade-in-up 0.6s ease-out forwards;
+      }
+      .animate-fade-in-up-subtle {
+        animation: fade-in-up-subtle 0.5s ease-out forwards;
+      }
+      .animate-pulse-gentle { animation: pulse-gentle 3s infinite ease-in-out; }
+      .animate-drop-fall { animation: drop-fall 1.2s cubic-bezier(0.6, 0.04, 0.98, 0.335) forwards 0.2s; }
+      .animate-splash-ripple-1 { animation: splash-ripple 1s ease-out forwards 1.2s; }
+      .animate-splash-ripple-2 { animation: splash-ripple 1s ease-out forwards 1.3s; }
+      .animate-logo-draw-main {
+        animation: draw-in 1.2s cubic-bezier(0.45, 0, 0.55, 1) forwards 1.3s;
+      }
+      .animate-logo-draw-eye {
+        animation: draw-in 0.8s cubic-bezier(0.45, 0, 0.55, 1) forwards 1.8s;
+      }
+      .animate-bounce-slow { animation: bounce-slow 2.5s infinite cubic-bezier(0.5, 0.05, 1, 0.5); }
+      
+      .scroll-animate {
+        opacity: 0;
+        transform: translateY(2rem);
+        transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .scroll-animate.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .scroll-animate-stagger > * {
+        transition-delay: var(--stagger-delay);
+      }
+
+      .interactive-scale {
+        transition-property: transform;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+      }
+      .interactive-scale:hover {
+        transform: scale(1.03);
+      }
+      .interactive-scale:active {
+        transform: scale(0.98);
+      }
+      /* For custom scrollbar in composers */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+      /* For custom themed scrollbar */
+      .themed-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .themed-scrollbar::-webkit-scrollbar-track {
+        background: var(--color-brand-secondary-100);
+        border-radius: 10px;
+      }
+      .themed-scrollbar::-webkit-scrollbar-thumb {
+        background-color: var(--color-brand-primary-300);
+        border-radius: 10px;
+      }
+      .themed-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-brand-primary-400);
+      }
+      .themed-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-brand-primary-300) var(--color-brand-secondary-100);
+      }
+      /* For animated ad border */
+      .animated-border-box {
+        position: relative;
+        background: var(--color-brand-surface);
+        background-clip: padding-box; /* Ensures background doesn't go under the border */
+        border: solid 2px transparent;
+        z-index: 1;
+      }
+      .animated-border-box::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: -1;
+        margin: -2px; /* Must be negative of the border-width */
+        border-radius: inherit; /* Inherit the border-radius from the parent */
+        background: linear-gradient(
+          90deg, 
+          var(--color-brand-primary-300), 
+          var(--color-brand-accent-300), 
+          var(--color-brand-primary-300),
+          var(--color-brand-accent-300)
+        );
+        background-size: 200% 200%;
+        animation: subtle-gradient-shift 10s ease infinite;
+      }
+      /* Set base theme colors for Tailwind */
+      :root {
+        --color-brand-primary-50: #f5fbff; --color-brand-primary-100: #e6f4ff; --color-brand-primary-200: #d1eaff; --color-brand-primary-300: #b8deff; --color-brand-primary-400: #98d1ff; --color-brand-primary-500: #79c4ff; --color-brand-primary-600: #5aabf0; --color-brand-primary-700: #4290d1; --color-brand-primary-800: #2f75b3; --color-brand-primary-900: #1c5a94;
+        --color-brand-secondary-50: #f8fafc; --color-brand-secondary-100: #f1f5f9; --color-brand-secondary-200: #e2e8f0; --color-brand-secondary-300: #cbd5e1; --color-brand-secondary-400: #94a3b8; --color-brand-secondary-500: #64748b; --color-brand-secondary-600: #475569; --color-brand-secondary-700: #334155; --color-brand-secondary-800: #1e293b; --color-brand-secondary-900: #0f172a;
+        --color-brand-accent-300: #f5e6ff; --color-brand-accent-400: #e9d1ff;
+        --color-brand-bg: var(--color-brand-secondary-50);
+        --color-brand-surface: #ffffff;
+        --color-brand-text-primary: var(--color-brand-secondary-800);
+        --color-brand-text-secondary: var(--color-brand-secondary-500);
+      }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: { 50: 'var(--color-brand-primary-50)', 100: 'var(--color-brand-primary-100)', 200: 'var(--color-brand-primary-200)', 300: 'var(--color-brand-primary-300)', 400: 'var(--color-brand-primary-400)', 500: 'var(--color-brand-primary-500)', 600: 'var(--color-brand-primary-600)', 700: 'var(--color-brand-primary-700)', 800: 'var(--color-brand-primary-800)', 900: 'var(--color-brand-primary-900)' },
+                            secondary: { 50: 'var(--color-brand-secondary-50)', 100: 'var(--color-brand-secondary-100)', 200: 'var(--color-brand-secondary-200)', 300: 'var(--color-brand-secondary-300)', 400: 'var(--color-brand-secondary-400)', 500: 'var(--color-brand-secondary-500)', 600: 'var(--color-brand-secondary-600)', 700: 'var(--color-brand-secondary-700)', 800: 'var(--color-brand-secondary-800)', 900: 'var(--color-brand-secondary-900)' },
+                            accent: { 300: 'var(--color-brand-accent-300)', 400: 'var(--color-brand-accent-400)' },
+                            bg: 'var(--color-brand-bg)',
+                            surface: 'var(--color-brand-surface)',
+                            'text-primary': 'var(--color-brand-text-primary)',
+                            'text-secondary': 'var(--color-brand-text-secondary)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.553.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "vite": "https://aistudiocdn.com/vite@^7.2.2",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "url": "https://aistudiocdn.com/url@^0.11.4",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-brand-bg">
+    <div id="root"></div>
+    <script type="module" src="/WD-main/index.tsx"></script>
+  </body>
+</html>

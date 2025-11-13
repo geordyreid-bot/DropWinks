@@ -1,0 +1,6 @@
+{
+  "name": "WinkDrops",
+  "description": "WinkDrops lets you anonymously send a 'Wink' to someone you're concerned about. Our AI provides gentle insights and supportive resources to help them take the next step towards wellness.",
+  "requestFramePermissions": [],
+  "enableFirebase": true
+}
