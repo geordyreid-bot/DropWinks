@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideProps, Inbox, Send, Users, Activity, LogOut, ArrowRight, UserPlus, Eye, Heart, Brain, Apple, Droplets, Check, Loader2, AlertTriangle, ChevronLeft, X, Twitter, Instagram, Smartphone, Ghost, Search, ClipboardCheck, ChevronDown, SendHorizontal, Quote, Home, Link, PlusCircle, Bell, BellOff, Share2, ChevronRight, ThumbsUp, ThumbsDown, ShieldCheck, Settings, Trash2, Ban, Sparkles, ChevronUp, Gift, Music4, HelpCircle, Contact, Mail, Pencil, Feather, LogIn, Star } from 'lucide-react';
+import { LucideProps, Inbox, Send, Users, Activity, LogOut, ArrowRight, UserPlus, Eye, Heart, Brain, Apple, Droplets, Check, Loader2, AlertTriangle, ChevronLeft, X, Twitter, Instagram, Smartphone, Ghost, Search, ClipboardCheck, ChevronDown, SendHorizontal, Quote, Home, Link, PlusCircle, Bell, BellOff, Share2, ChevronRight, ThumbsUp, ThumbsDown, ShieldCheck, Settings, Trash2, Ban, Sparkles, ChevronUp, Gift, Music4, HelpCircle, Contact, Mail, Pencil, Feather, LogIn, Star, Scale, BookOpen } from 'lucide-react';
 
 export const icons = {
   inbox: Inbox,
@@ -52,6 +52,8 @@ export const icons = {
   pencil: Pencil,
   logIn: LogIn,
   star: Star,
+  scale: Scale,
+  bookOpen: BookOpen,
 };
 
 type IconProps = LucideProps & {

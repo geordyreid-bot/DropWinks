@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { Wink, Category, CommunityExperience, ReactionType, SocialMediaPost } from '../types';
 import { Icon } from './ui/Icon';
@@ -108,12 +109,10 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ winks, experiences
     const [filter, setFilter] = useState<Category | 'All'>('All');
     
     const handleAddExperience = (text: string) => {
-        const newExperience: CommunityExperience = {
-            id: `exp-${Date.now()}`,
+        const newExperience: Omit<CommunityExperience, 'id' | 'timestamp'> = {
             text,
-            timestamp: new Date(),
         };
-        onAddExperience(newExperience);
+        onAddExperience(newExperience as CommunityExperience);
     };
 
     const filteredWinks = winks.filter(wink => 
@@ -129,7 +128,8 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ winks, experiences
     const visibleWinks = filteredWinks.slice(0, visibleCount);
     
     // Sort experiences newest first for display
-    const sortedExperiences = [...experiences].sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
+    // Fix: Use toMillis() for Timestamp comparison
+    const sortedExperiences = [...experiences].sort((a,b) => b.timestamp.toMillis() - a.timestamp.toMillis());
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">

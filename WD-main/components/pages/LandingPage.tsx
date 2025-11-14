@@ -1,3 +1,7 @@
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import { Icon } from '../ui/Icon';
 import { PhoneMockup } from '../PhoneMockup';
@@ -5,6 +9,11 @@ import { MOCK_COMMUNITY_EXPERIENCES } from '../../constants';
 import { Modal } from '../ui/Modal';
 import { Logo } from '../ui/Logo';
 import { AppTour } from '../AppTour';
+import { auth } from '../../firebase';
+// Fix: Use firebase/compat/app for imports and methods.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+
 
 const AnimatedLogo = () => {
     return (
@@ -42,7 +51,7 @@ const AnimatedLogo = () => {
              {/* The splash effect container */}
             <div className="absolute inset-0 flex items-center justify-center">
                 <div className="absolute w-48 h-48">
-                    <div className="absolute inset-0 border-4 border-brand-primary-300 rounded-full animate-splash-ripple-1 opacity-0" style={{transform: 'scale(0)'}}></div>
+                    <div className="absolute inset-0 border-2 border-brand-primary-300 rounded-full animate-splash-ripple-1 opacity-0" style={{transform: 'scale(0)'}}></div>
                     <div className="absolute inset-0 border-2 border-brand-primary-400 rounded-full animate-splash-ripple-2 opacity-0" style={{transform: 'scale(0)'}}></div>
                 </div>
             </div>
@@ -83,11 +92,12 @@ const ExpertPanel: React.FC = () => {
     const experts = [
         { icon: 'shieldCheck' as const, name: 'Physicians' },
         { icon: 'brain' as const, name: 'Therapists' },
-        { icon: 'users' as const, name: 'Educators' },
-        { icon: 'activity' as const, name: 'Coaches' },
+        { icon: 'helpCircle' as const, name: 'Counsellors' },
+        { icon: 'scale' as const, name: 'Lawyers' },
+        { icon: 'bookOpen' as const, name: 'Educators' },
     ];
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 text-center">
             {experts.map(expert => (
                 <div key={expert.name} className="flex flex-col items-center">
                     <div className="w-20 h-20 bg-brand-surface text-brand-primary-500 rounded-full flex items-center justify-center mb-3 shadow-lg border border-brand-secondary-200/50">
@@ -100,31 +110,199 @@ const ExpertPanel: React.FC = () => {
     );
 };
 
-export const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
+interface AuthModalProps {
+    type: 'login' | 'signup';
+    onClose: () => void;
+    setModal: (modal: 'login' | 'signup' | null) => void;
+}
+
+const AuthModal: React.FC<AuthModalProps> = ({ type, onClose, setModal }) => {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const isLogin = type === 'login';
+
+    const handleAuthError = (err: any) => {
+        let message = 'An unknown error occurred. Please try again.';
+        switch (err.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                message = 'Invalid email or password.';
+                break;
+            case 'auth/email-already-in-use':
+                message = 'An account with this email already exists.';
+                break;
+            case 'auth/weak-password':
+                message = 'Password should be at least 6 characters.';
+                break;
+            case 'auth/invalid-email':
+                message = 'Please enter a valid email address.';
+                break;
+        }
+        setError(message);
+    };
+
+    const handleGoogleSignIn = async () => {
+        setIsLoading(true);
+        setError(null);
+        // Fix: Use firebase.auth.GoogleAuthProvider for compat mode.
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            // Fix: Use auth.signInWithPopup(provider) for compat mode.
+            await auth.signInWithPopup(provider);
+            onClose();
+        } catch (err: any) {
+            handleAuthError(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+
+        if (isLogin) {
+            try {
+                // Fix: Use auth.signInWithEmailAndPassword for compat mode.
+                await auth.signInWithEmailAndPassword(email, password);
+                onClose();
+            } catch (err: any) {
+                handleAuthError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        } else { // Sign up
+            if (!name.trim()) {
+                setError("Please enter your name.");
+                setIsLoading(false);
+                return;
+            }
+            try {
+                // Fix: Use auth.createUserWithEmailAndPassword for compat mode.
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                if (userCredential.user) {
+                    // Fix: Use user.updateProfile for compat mode.
+                    await userCredential.user.updateProfile({ displayName: name });
+                }
+                onClose();
+            } catch (err: any) {
+                handleAuthError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    };
+
+    return (
+         <Modal isOpen={true} onClose={onClose} title={isLogin ? "Welcome Back" : "Create Account"}>
+            <div className="space-y-4">
+                {error && <p className="text-sm text-center text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>}
+                 <button onClick={handleGoogleSignIn} disabled={isLoading} className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-brand-secondary-300 rounded-lg hover:bg-brand-secondary-50 transition-colors interactive-scale disabled:opacity-50">
+                    <svg className="w-5 h-5" viewBox="0 0 48 48" role="img" aria-label="Google logo">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.42-4.55H24v8.51h12.84c-.57 2.82-2.34 5.22-4.96 6.81v5.53h7.1c4.16-3.83 6.56-9.47 6.56-16.3z"></path>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59v-5.53H2.56C1.02 17.02 0 20.36 0 24c0 3.64 1.02 6.98 2.56 9.53l7.97-6.53z"></path>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.1-5.53c-2.16 1.45-4.96 2.3-8.79 2.3-6.66 0-12.33-4.46-14.35-10.46H2.56v5.73C6.51 42.62 14.62 48 24 48z"></path>
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                    Sign {isLogin ? 'in' : 'up'} with Google
+                </button>
+
+                <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-brand-secondary-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="bg-brand-surface px-2 text-brand-text-secondary">Or</span>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {!isLogin && (
+                        <div>
+                            <label htmlFor="name" className="sr-only">Name</label>
+                            <input
+                                id="name"
+                                type="text"
+                                placeholder="Your Name"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full p-3 bg-brand-secondary-100 border border-transparent rounded-lg focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300"
+                            />
+                        </div>
+                    )}
+                    <div>
+                        <label htmlFor="email" className="sr-only">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full p-3 bg-brand-secondary-100 border border-transparent rounded-lg focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="password" className="sr-only">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            placeholder="••••••••"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full p-3 bg-brand-secondary-100 border border-transparent rounded-lg focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300"
+                        />
+                    </div>
+                    <button type="submit" disabled={isLoading} className="w-full bg-brand-primary-500 text-white font-bold py-3 px-4 rounded-lg shadow-sm hover:bg-brand-primary-600 transition-colors disabled:bg-slate-300 flex items-center justify-center gap-2">
+                        {isLoading ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : (isLogin ? 'Log In' : 'Sign Up')}
+                    </button>
+                </form>
+
+                <p className="mt-6 text-center text-sm text-brand-text-secondary">
+                    {isLogin ? "Don't have an account?" : "Already have an account?"}
+                    <button onClick={() => setModal(isLogin ? 'signup' : 'login')} className="font-semibold text-brand-primary-600 hover:underline ml-1">
+                        {isLogin ? 'Sign up' : 'Log in'}
+                    </button>
+                </p>
+            </div>
+        </Modal>
+    );
+};
+
+
+export const LandingPage: React.FC = () => {
     const [showContent, setShowContent] = useState(false);
     const [modal, setModal] = useState<'login' | 'signup' | null>(null);
     const [isTourOpen, setIsTourOpen] = useState(false);
 
     const testimonials = [
+         {
+            text: "Getting a Wink was a turning point. It made me realize I wasn't hiding my struggles as well as I thought, but also that someone cared enough to reach out. It gave me the courage to talk to a professional.",
+            author: "Anonymous User",
+            role: "Wink Recipient",
+        },
         {
-            text: "WinkDrops addresses a critical challenge in mental health support: initiating the conversation. It provides a non-confrontational 'first step' that can empower individuals to seek help and feel validated in their struggles.",
+            text: "WinkDrops addresses a critical challenge in mental health support: initiating the conversation. It provides a non-confrontational 'first step' that can empower individuals.",
             author: "Dr. Anya Sharma",
             role: "Licensed Therapist",
         },
         {
-            text: "I see students every day who notice their friends are struggling but are afraid to say the wrong thing. This tool gives them a safe, supportive way to express concern. It's a brilliant bridge between peer support and professional resources.",
+            text: "I was so anxious about a friend, and WinkDrop let me break the ice without making things awkward. They actually brought it up to me later and we had a real conversation. So grateful.",
+            author: "Anonymous User",
+            role: "Wink Sender",
+        },
+        {
+            text: "I see students every day who notice their friends are struggling but are afraid to say the wrong thing. This tool gives them a safe, supportive way to express concern.",
             author: "David Chen",
             role: "High School Counselor",
-        },
-        {
-            text: "As a physician, I appreciate that WinkDrops emphasizes that it is not a diagnostic tool. Instead, it gently guides individuals toward professional resources, which is a responsible and much-needed approach in the digital health space.",
-            author: "Dr. Marcus Thorne",
-            role: "Primary Care Physician",
-        },
-        {
-            text: "This app normalizes the act of checking in. It lowers the barrier for entry for difficult conversations, fostering a culture of care and empathy that is invaluable in any community, be it a campus or a workplace.",
-            author: "Elena Rodriguez",
-            role: "University Wellness Coordinator",
         },
     ];
 
@@ -135,7 +313,7 @@ export const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
             setActiveTestimonial(prev => (prev + 1) % testimonials.length);
         }, 7000); // 7 seconds per testimonial
         return () => clearInterval(timer);
-    }, []); // Empty dependency array to run only once.
+    }, [testimonials.length]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -159,212 +337,154 @@ export const LandingPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
         return () => elements.forEach(el => observer.unobserve(el));
     }, []);
     
-    const AuthModal: React.FC<{ type: 'login' | 'signup', onClose: () => void, onAuthSuccess: () => void }> = ({ type, onClose, onAuthSuccess }) => {
-        const isLogin = type === 'login';
-
-        const handleSubmit = (e: React.FormEvent) => {
-            e.preventDefault();
-            // In a real app, this would trigger Firebase auth
-            onAuthSuccess();
-        };
-
-        return (
-             <Modal isOpen={true} onClose={onClose} title={isLogin ? "Welcome Back" : "Create Account"}>
-                <div className="space-y-4">
-                     <button className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-brand-secondary-300 rounded-lg hover:bg-brand-secondary-50 transition-colors interactive-scale">
-                        <svg className="w-5 h-5" viewBox="0 0 48 48" role="img" aria-label="Google logo">
-                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.42-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                            <path fill="none" d="M0 0h48v48H0z"></path>
-                        </svg>
-                        <span className="text-sm font-semibold text-brand-text-primary">Continue with Google</span>
-                    </button>
-
-                    <div className="flex items-center gap-2">
-                        <hr className="flex-grow border-brand-secondary-200" />
-                        <span className="text-xs text-brand-text-secondary">OR</span>
-                        <hr className="flex-grow border-brand-secondary-200" />
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-3">
-                        {!isLogin && (
-                            <div>
-                                <label className="text-sm font-medium text-brand-text-primary" htmlFor="name">Name</label>
-                                <input id="name" type="text" required className="mt-1 w-full p-2 bg-brand-secondary-100 border border-transparent rounded-md focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors" />
-                            </div>
-                        )}
-                         <div>
-                            <label className="text-sm font-medium text-brand-text-primary" htmlFor="email">Email</label>
-                            <input id="email" type="email" required className="mt-1 w-full p-2 bg-brand-secondary-100 border border-transparent rounded-md focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors" />
-                        </div>
-                         <div>
-                            <label className="text-sm font-medium text-brand-text-primary" htmlFor="password">Password</label>
-                            <input id="password" type="password" required className="mt-1 w-full p-2 bg-brand-secondary-100 border border-transparent rounded-md focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors" />
-                        </div>
-                        <button type="submit" className="w-full !mt-5 bg-brand-primary-500 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm hover:bg-brand-primary-600 transition-colors interactive-scale">
-                           {isLogin ? 'Log In' : 'Sign Up'}
-                        </button>
-                    </form>
-                </div>
-            </Modal>
-        );
-    }
 
     return (
-        <div className="w-full bg-gradient-to-br from-brand-primary-100 via-brand-bg to-brand-accent-300 overflow-x-hidden">
-            {modal && <AuthModal type={modal} onClose={() => setModal(null)} onAuthSuccess={onLogin} />}
-            <AppTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
-            
-            <div className="min-h-screen flex flex-col justify-center items-center p-6 text-center relative">
-                <div className="relative flex flex-col items-center">
-                    <AnimatedLogo />
-
-                    <div className={`transition-all duration-700 ease-out ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '200ms' }}>
-                        <h1 className="text-5xl md:text-6xl font-extrabold text-brand-secondary-800 tracking-tight mt-8">
-                            Gentle Gestures,<br /> Anonymously
-                        </h1>
-                         <p className="mt-4 text-lg text-brand-text-secondary max-w-md mx-auto">
-                            Drop an anonymous Wink of support, powered by kind, AI-driven insights.
-                        </p>
-                    </div>
-                    
-                     <div className={`transition-all duration-700 ease-out ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} mt-10 flex flex-col sm:flex-row items-center justify-center gap-4`} style={{ transitionDelay: '400ms' }}>
-                        <button onClick={() => setModal('signup')} className="bg-brand-primary-500 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-brand-primary-600 transition-all flex items-center justify-center gap-3 interactive-scale animate-pulse-gentle w-full sm:w-auto">
-                            <Icon name="eye" className="w-6 h-6"/>
-                            Get Started
-                        </button>
-                        <button onClick={() => setIsTourOpen(true)} className="bg-brand-surface text-brand-text-primary font-bold text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-brand-secondary-50 transition-all flex items-center justify-center gap-3 interactive-scale w-full sm:w-auto border border-brand-secondary-200">
-                            <Icon name="sparkles" className="w-6 h-6"/>
-                            Take a Tour
-                        </button>
-                    </div>
-                    <div className={`transition-all duration-700 ease-out ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} mt-4`} style={{ transitionDelay: '500ms' }}>
-                         <button onClick={() => setModal('login')} className="font-bold text-brand-text-secondary hover:text-brand-text-primary transition-colors">
-                            Already have an account? Log In
-                        </button>
-                    </div>
-                </div>
-
-                <div className={`absolute bottom-8 text-brand-text-secondary transition-opacity duration-700 ${showContent ? 'opacity-100' : 'opacity-0'}`}>
-                    <Icon name="chevronDown" className="w-8 h-8 animate-bounce-slow" />
-                </div>
-            </div>
-
+        <div className="bg-brand-bg min-h-screen overflow-x-hidden">
             <main>
-                <Section>
-                    <div className="text-center max-w-2xl mx-auto scroll-animate">
-                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">A Wink is more than a message.</h2>
-                        <p className="mt-4 text-lg text-brand-text-secondary">It's a bridge to a conversation, a gentle way to show you care without the pressure of finding the perfect words. Here’s how it works:</p>
-                    </div>
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 scroll-animate scroll-animate-stagger">
-                        <div style={{'--stagger-delay': '0ms'} as React.CSSProperties}><FeatureCard icon="eye" title="1. Observe">You notice a friend might be struggling. You're concerned but unsure how to approach them.</FeatureCard></div>
-                        <div style={{'--stagger-delay': '150ms'} as React.CSSProperties}><FeatureCard icon="send" title="2. Wink">Anonymously send a 'Wink' by selecting your observations. Our AI prepares gentle, non-alarming insights and resources.</FeatureCard></div>
-                        <div style={{'--stagger-delay': '300ms'} as React.CSSProperties}><FeatureCard icon="heart" title="3. Support">Your friend receives a supportive message, encouraging them to explore resources and know someone cares.</FeatureCard></div>
-                    </div>
-                </Section>
-                
-                <Section>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                        <div className="scroll-animate">
-                            <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">See It in Action</h2>
-                            <p className="mt-4 text-lg text-brand-text-secondary">A Wink is designed to be helpful, not hurtful. The recipient gets a supportive message with potential insights and a list of resources—never a diagnosis or an alarm.</p>
-                            <p className="mt-4 text-brand-text-secondary">This approach empowers them to explore on their own terms, in their own time, while feeling seen and supported.</p>
-                        </div>
-                        <div className="scroll-animate" style={{'--stagger-delay': '150ms'} as React.CSSProperties}>
-                           <PhoneMockup />
-                        </div>
-                    </div>
-                </Section>
-
-                <Section className="bg-brand-secondary-50">
-                    <div className="text-center max-w-2xl mx-auto scroll-animate">
-                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">More Ways to Show You Care</h2>
-                        <p className="mt-4 text-lg text-brand-text-secondary">Beyond a Wink, there are other gentle ways to connect and offer support.</p>
-                    </div>
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 scroll-animate scroll-animate-stagger">
-                        <div style={{'--stagger-delay': '0ms'} as React.CSSProperties}><FeatureCard icon="share" title="Get a Second Opinion">Unsure about an observation? Confidentially ask trusted friends for their anonymous input with a simple agree/disagree poll.</FeatureCard></div>
-                        <div style={{'--stagger-delay': '150ms'} as React.CSSProperties}><FeatureCard icon="nudge" title="Send a Nudge">Sometimes a simple, positive message is all it takes. Send a 'Nudge' to let someone know you're thinking of them, no observations needed.</FeatureCard></div>
-                    </div>
-                </Section>
-                
-                <Section>
-                    <div className="text-center max-w-2xl mx-auto scroll-animate">
-                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">Stories from the Community</h2>
-                        <p className="mt-4 text-lg text-brand-text-secondary">Real stories, real impact. See how a simple gesture has made a difference.</p>
-                    </div>
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 scroll-animate scroll-animate-stagger">
-                        {MOCK_COMMUNITY_EXPERIENCES.map((exp, index) => (
-                            <div key={exp.id} style={{'--stagger-delay': `${index * 150}ms`} as React.CSSProperties}>
-                               <TestimonialCard text={exp.text} author="Anonymous User" role="Shared Experience"/>
+                <Section className="relative pt-32 pb-16 md:pt-48 md:pb-24 overflow-hidden">
+                    <div className="absolute -top-32 -left-32 w-96 h-96 bg-brand-primary-200/50 rounded-full filter blur-3xl opacity-60"></div>
+                    <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-brand-accent-300/50 rounded-full filter blur-3xl opacity-60"></div>
+                    <div className="relative z-10 text-center flex flex-col items-center">
+                        <AnimatedLogo />
+                        {showContent && (
+                            <div className="animate-fade-in-up">
+                                <h1 className="text-4xl md:text-5xl font-bold text-brand-text-primary mt-8 max-w-3xl mx-auto">
+                                    Gentle gestures, Anonymously.
+                                </h1>
+                                <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                                    <button onClick={() => setModal('login')} className="font-semibold bg-brand-primary-500 text-white py-3 px-8 rounded-full shadow-lg hover:bg-brand-primary-600 transition-colors interactive-scale">
+                                        Log In
+                                    </button>
+                                    <button onClick={() => setModal('signup')} className="font-semibold bg-brand-secondary-800 text-white py-3 px-8 rounded-full shadow-lg hover:bg-black transition-colors interactive-scale">
+                                        Sign Up
+                                    </button>
+                                </div>
+                                 <button onClick={() => setIsTourOpen(true)} className="mt-8 font-semibold text-brand-text-primary hover:text-brand-primary-600 transition-colors flex items-center gap-2 interactive-scale mx-auto">
+                                    <Icon name="helpCircle" className="w-5 h-5" /> Take a Tour
+                                </button>
                             </div>
-                        ))}
+                        )}
+                    </div>
+                </Section>
+                
+                <Section isPadded={false} className="relative">
+                    <div className="scroll-animate is-visible">
+                        <PhoneMockup />
                     </div>
                 </Section>
 
-                <Section className="bg-brand-secondary-50">
-                    <div className="text-center max-w-2xl mx-auto scroll-animate">
-                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">What Professionals Are Saying</h2>
-                        <p className="mt-4 text-lg text-brand-text-secondary">Mental health experts, educators, and physicians see the value in opening gentle lines of communication.</p>
+                <Section className="bg-brand-secondary-100/50">
+                    <div className="text-center max-w-3xl mx-auto">
+                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary scroll-animate">How it Works</h2>
+                        <p className="text-md text-brand-text-secondary mt-3 scroll-animate" style={{ transitionDelay: '100ms' }}>A simple, three-step process to turn concern into connection.</p>
                     </div>
-                    <div className="mt-12 max-w-2xl mx-auto scroll-animate">
-                        <div className="relative min-h-[340px] sm:min-h-[280px]">
+                    <div className="grid md:grid-cols-3 gap-8 mt-12 scroll-animate-stagger">
+                        <div style={{ '--stagger-delay': '200ms' }}>
+                            <FeatureCard icon="eye" title="1. You Observe">
+                                Select what you've noticed from a private list of observations—from physical signs to behavioral changes. It’s quick, simple, and non-judgmental.
+                            </FeatureCard>
+                        </div>
+                         <div style={{ '--stagger-delay': '300ms' }}>
+                            <FeatureCard icon="sparkles" title="2. AI Provides Insights">
+                                Our AI analyzes your selections and prepares a gentle message with potential insights and helpful, vetted resources. It's supportive, not alarming.
+                            </FeatureCard>
+                        </div>
+                         <div style={{ '--stagger-delay': '400ms' }}>
+                            <FeatureCard icon="shieldCheck" title="3. They Receive Support">
+                                Your friend receives a completely anonymous message of support, giving them the privacy to explore resources and reflect without pressure.
+                            </FeatureCard>
+                        </div>
+                    </div>
+                </Section>
+
+                <Section>
+                     <div className="text-center max-w-3xl mx-auto">
+                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary scroll-animate">Developed with Expert Input</h2>
+                        <p className="text-md text-brand-text-secondary mt-3 scroll-animate" style={{ transitionDelay: '100ms' }}>Our framework is developed with input from physicians, therapists, counsellors, lawyers, and educators to ensure our approach is responsible, safe, and genuinely helpful.</p>
+                    </div>
+                    <div className="mt-12 scroll-animate" style={{ transitionDelay: '200ms' }}>
+                        <ExpertPanel />
+                    </div>
+                    <div className="mt-24 text-center max-w-3xl mx-auto">
+                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary scroll-animate">Trusted by Users & Professionals</h2>
+                    </div>
+                    <div className="mt-12 max-w-3xl mx-auto scroll-animate" style={{ transitionDelay: '200ms' }}>
+                        <div className="relative h-72 md:h-64">
                             {testimonials.map((testimonial, index) => (
                                 <div
                                     key={index}
-                                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === activeTestimonial ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-                                    aria-hidden={index !== activeTestimonial}
+                                    className={`absolute inset-0 transition-opacity duration-1000 ${activeTestimonial === index ? 'opacity-100' : 'opacity-0'}`}
                                 >
-                                    <TestimonialCard
-                                        text={testimonial.text}
-                                        author={testimonial.author}
-                                        role={testimonial.role}
-                                    />
+                                    <TestimonialCard {...testimonial} />
                                 </div>
-                            ))}
-                        </div>
-                        
-                        <div className="flex justify-center gap-3 mt-6">
-                            {testimonials.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setActiveTestimonial(index)}
-                                    className={`w-3 h-3 rounded-full transition-colors ${activeTestimonial === index ? 'bg-brand-primary-500' : 'bg-brand-secondary-300 hover:bg-brand-secondary-400'}`}
-                                    aria-label={`Go to testimonial ${index + 1}`}
-                                />
                             ))}
                         </div>
                     </div>
                 </Section>
                 
-                <Section className="bg-brand-surface/50">
-                    <div className="text-center max-w-3xl mx-auto scroll-animate">
-                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">Grounded in Care, Guided by Experts</h2>
-                        <p className="mt-4 text-lg text-brand-text-secondary">
-                            WinkDrops was designed and informed by a team of dedicated Physicians, Therapists, Educators, and Coaches. Our goal is to blend thoughtful technology with expert-backed principles of empathy and supportive communication.
-                        </p>
+                 <Section className="bg-brand-secondary-100/50">
+                     <div className="text-center max-w-3xl mx-auto">
+                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary scroll-animate">More Than Just a Message</h2>
+                        <p className="text-md text-brand-text-secondary mt-3 scroll-animate" style={{ transitionDelay: '100ms' }}>WinkDrops offers a suite of tools for fostering well-being.</p>
                     </div>
-                     <div className="mt-12 max-w-2xl mx-auto scroll-animate scroll-animate-stagger" style={{'--stagger-delay': `150ms`} as React.CSSProperties}>
-                        <ExpertPanel />
+                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12 scroll-animate-stagger">
+                         <div style={{ '--stagger-delay': '200ms' }}><FeatureCard icon="nudge" title="Send a Nudge">Just want to say "thinking of you"? Send a simple, pre-written positive message.</FeatureCard></div>
+                         <div style={{ '--stagger-delay': '300ms' }}><FeatureCard icon="clipboardCheck" title="Self Check-in">Use the same observation checklist for yourself, privately. Get personalized insights and resources for your own well-being.</FeatureCard></div>
+                         <div style={{ '--stagger-delay': '400ms' }}><FeatureCard icon="share" title="Second Opinion">Unsure about a Wink? Confidentially ask a few trusted friends for their anonymous input to feel more certain.</FeatureCard></div>
+                         <div style={{ '--stagger-delay': '500ms' }}><FeatureCard icon="users" title="Community Feed">See a global stream of anonymous Winks being sent and received, showing that you are not alone in your concerns or struggles.</FeatureCard></div>
                     </div>
                 </Section>
 
                 <Section>
-                    <div className="text-center max-w-2xl mx-auto scroll-animate">
-                        <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">Ready to show you care?</h2>
-                        <p className="mt-4 text-lg text-brand-text-secondary">Start a gentle conversation today. It's anonymous, free, and could make all the difference.</p>
-                        <button onClick={() => setModal('signup')} className="mt-8 bg-brand-primary-500 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-lg hover:shadow-xl hover:bg-brand-primary-600 transition-all flex items-center gap-3 mx-auto interactive-scale animate-pulse-gentle">
-                            <Icon name="eye" className="w-6 h-6"/>
-                            Get Started
+                    <div className="bg-gradient-to-br from-brand-primary-400 to-brand-accent-400 text-white p-8 md:p-12 rounded-2xl shadow-2xl text-center scroll-animate">
+                        <h2 className="text-3xl md:text-4xl font-bold">Ready to make a difference?</h2>
+                        <p className="mt-3 text-lg opacity-90 max-w-2xl mx-auto">Start a conversation that matters. Your gentle gesture could be the first step on someone's path to feeling better.</p>
+                        <button onClick={() => setModal('signup')} className="mt-8 bg-white text-brand-primary-600 font-bold py-3 px-8 rounded-full shadow-lg hover:bg-brand-primary-50 transition-colors interactive-scale">
+                            Create Your First Wink
                         </button>
                     </div>
                 </Section>
             </main>
 
-            <footer className="text-center p-8 bg-brand-secondary-100/50 text-brand-text-secondary text-sm">
-                &copy; {new Date().getFullYear()} WinkDrops. All rights reserved.
+            <footer className="bg-brand-secondary-800 text-white">
+                <div className="w-full max-w-5xl mx-auto px-6 py-12">
+                     <div className="grid md:grid-cols-4 gap-8">
+                        <div>
+                            <Logo />
+                            <p className="text-sm text-brand-secondary-300 mt-2">The gentle way to show you care.</p>
+                        </div>
+                        <div>
+                            <h4 className="font-bold">Features</h4>
+                            <ul className="space-y-2 mt-2 text-sm text-brand-secondary-300">
+                                <li>Anonymous Winks</li>
+                                <li>Self Check-in</li>
+                                <li>Community Feed</li>
+                            </ul>
+                        </div>
+                         <div>
+                            <h4 className="font-bold">Company</h4>
+                            <ul className="space-y-2 mt-2 text-sm text-brand-secondary-300">
+                                <li>About Us</li>
+                                <li>Contact Support</li>
+                                <li>Privacy Policy</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold">Connect</h4>
+                             <div className="flex gap-4 mt-2">
+                                <a href="#" aria-label="Twitter"><Icon name="twitter" className="w-6 h-6 text-brand-secondary-300 hover:text-white" /></a>
+                                <a href="#" aria-label="Instagram"><Icon name="instagram" className="w-6 h-6 text-brand-secondary-300 hover:text-white" /></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-12 border-t border-brand-secondary-700 pt-8 text-center text-sm text-brand-secondary-400">
+                        &copy; {new Date().getFullYear()} WinkDrops. All Rights Reserved. This is a demonstration app.
+                    </div>
+                </div>
             </footer>
+            
+            {modal && <AuthModal type={modal} onClose={() => setModal(null)} setModal={setModal} />}
+            <AppTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
         </div>
     );
 };

@@ -4,7 +4,9 @@ import { Icon } from './ui/Icon';
 import { WinkDetailView } from './WinkDetailView';
 import { SecondOpinionRequestView } from './SecondOpinionRequestView';
 import { Modal } from './ui/Modal';
-import { Timestamp } from 'firebase/firestore';
+// Fix: Use firebase/compat/app for imports and types.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 
 interface InboxProps {
     items: InboxItem[];
@@ -17,7 +19,7 @@ interface InboxProps {
     navigate: (page: Page) => void;
 }
 
-const formatDisplayDate = (date: Timestamp): string => {
+const formatDisplayDate = (date: firebase.firestore.Timestamp): string => {
     const jsDate = date.toDate();
     const now = new Date();
     const diffSeconds = Math.round((now.getTime() - jsDate.getTime()) / 1000);

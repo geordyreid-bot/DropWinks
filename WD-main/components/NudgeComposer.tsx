@@ -8,7 +8,6 @@ import { SyncContactsModal } from './ui/SyncContactsModal';
 import { generateNudgeSuggestions } from '../services/geminiService';
 import { ContactEditModal } from './ui/ContactEditModal';
 import { ScheduleNudgeModal } from './ui/ScheduleNudgeModal';
-import { Timestamp } from 'firebase/firestore';
 
 interface NudgeComposerProps {
     onNudgeSent: (nudge: Omit<Nudge, 'id' | 'timestamp'>) => void;
@@ -266,7 +265,7 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-28 space-y-6">
+                <div className="flex-1 overflow-y-auto px-6 sm:p-8 space-y-6">
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <h2 className="text-xl font-semibold text-brand-text-primary">1. Choose a Recipient</h2>
@@ -323,19 +322,19 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
                                         {recipient === contact.name && <Icon name="check" className="w-5 h-5 text-brand-primary-600 ml-auto"/>}
                                         {contact.isBlocked && <span className="ml-auto text-xs font-bold text-rose-600 uppercase tracking-wider">Blocked</span>}
                                     </div>
-                                     <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-surface/80 backdrop-blur-sm rounded-full p-1">
+                                    <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-surface/80 backdrop-blur-sm rounded-full p-1">
                                         <Tooltip content="Edit Contact">
-                                            <button onClick={() => setEditingContact(contact)} className="p-1.5 rounded-full hover:bg-brand-secondary-200 text-brand-secondary-500 hover:text-brand-primary-600 interactive-scale" aria-label={`Edit ${contact.name}`}>
+                                            <button onClick={() => setEditingContact(contact)} className="p-1.5 rounded-full hover:bg-brand-secondary-200 text-brand-secondary-500 hover:text-brand-primary-600 interactive-scale" aria-label="Edit Contact">
                                                 <Icon name="pencil" className="w-4 h-4" />
                                             </button>
                                         </Tooltip>
                                         <Tooltip content={contact.isBlocked ? 'Unblock Contact' : 'Block Contact'}>
-                                            <button onClick={() => setActionTarget({ contact, type: contact.isBlocked ? 'unblock' : 'block' })} className="p-1.5 rounded-full hover:bg-brand-secondary-200 text-brand-secondary-500 hover:text-rose-600 interactive-scale" aria-label={contact.isBlocked ? `Unblock ${contact.name}` : `Block ${contact.name}`}>
+                                            <button onClick={() => setActionTarget({ contact, type: contact.isBlocked ? 'unblock' : 'block' })} className="p-1.5 rounded-full hover:bg-brand-secondary-200 text-brand-secondary-500 hover:text-rose-600 interactive-scale" aria-label={contact.isBlocked ? 'Unblock Contact' : 'Block Contact'}>
                                                 <Icon name="ban" className="w-4 h-4" />
                                             </button>
                                         </Tooltip>
                                         <Tooltip content="Delete Contact">
-                                            <button onClick={() => setActionTarget({ contact, type: 'delete' })} className="p-1.5 rounded-full hover:bg-brand-secondary-200 text-brand-secondary-500 hover:text-rose-600 interactive-scale" aria-label={`Delete ${contact.name}`}>
+                                            <button onClick={() => setActionTarget({ contact, type: 'delete' })} className="p-1.5 rounded-full hover:bg-brand-secondary-200 text-brand-secondary-500 hover:text-rose-600 interactive-scale" aria-label="Delete Contact">
                                                 <Icon name="trash" className="w-4 h-4" />
                                             </button>
                                         </Tooltip>
@@ -345,82 +344,80 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        <div>
-                            <h2 className="text-xl font-semibold text-brand-text-primary mb-2 flex items-center gap-2">
-                                <Icon name="sparkles" className="w-5 h-5 text-amber-500" />
-                                <span>2. Generate with AI (Optional)</span>
-                            </h2>
-                            <p className="text-brand-text-secondary mb-3">Describe the situation to get personalized message ideas.</p>
-                            <div className="flex flex-col sm:flex-row gap-2">
-                                <input
-                                    type="text"
-                                    value={aiContext}
-                                    onChange={(e) => setAiContext(e.target.value)}
-                                    placeholder="e.g., 'My friend is stressed about exams...'"
-                                    className="flex-grow p-3 bg-brand-secondary-100 border border-transparent placeholder-brand-secondary-400 rounded-lg focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleGenerateSuggestions}
-                                    disabled={!aiContext.trim() || isGenerating}
-                                    className="bg-brand-secondary-800 text-white font-bold py-3 px-4 rounded-lg shadow-sm hover:bg-brand-secondary-900 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 interactive-scale"
-                                >
-                                    <Icon name={isGenerating ? 'loader' : 'sparkles'} className={`w-5 h-5 ${isGenerating ? 'animate-spin' : ''}`} />
-                                    {isGenerating ? 'Generating...' : 'Get Ideas'}
+                    <div>
+                        <h2 className="text-xl font-semibold text-brand-text-primary mb-2">2. Write a Message</h2>
+                        <p className="text-brand-text-secondary mb-4">Choose a pre-written message, use AI to generate one, or write your own.</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                            {PREDEFINED_NUDGES.slice(0, 6).map(nudge => (
+                                <button key={nudge} onClick={() => setMessage(nudge)} className={`p-3 text-left text-sm rounded-lg border transition-colors ${message === nudge ? 'bg-brand-primary-100 border-brand-primary-300' : 'bg-brand-secondary-50 border-brand-secondary-200 hover:bg-brand-secondary-100'}`}>
+                                    {nudge}
                                 </button>
-                            </div>
-                            {aiError && <p className="text-sm text-red-600 mt-2">{aiError}</p>}
+                            ))}
                         </div>
-
-                        <div>
-                            <h2 className="text-xl font-semibold text-brand-text-primary mb-2">3. Pick a Positive Message</h2>
-                            <p className="text-brand-text-secondary mb-4">Choose one of the kind messages below to send.</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {isGenerating && (
-                                    <div className="sm:col-span-2 text-center p-4">
-                                        <Icon name="loader" className="w-6 h-6 animate-spin mx-auto text-brand-primary-500" />
-                                    </div>
-                                )}
-                                {aiSuggestions.map(nudge => (
-                                    <button key={nudge} onClick={() => setMessage(nudge)} className={`p-4 border rounded-xl text-left text-sm font-semibold transition-all duration-200 transform hover:scale-105 interactive-scale ${message === nudge ? 'bg-brand-primary-500 text-white border-transparent' : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'}`}>
-                                        <div className="flex items-start gap-2">
-                                            <Icon name="sparkles" className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                                            <span>{nudge}</span>
-                                        </div>
-                                    </button>
-                                ))}
-                                {PREDEFINED_NUDGES.map(nudge => (
-                                    <button key={nudge} onClick={() => setMessage(nudge)} className={`p-4 border rounded-xl text-left text-sm font-semibold transition-all duration-200 transform hover:scale-105 interactive-scale ${message === nudge ? 'bg-brand-primary-500 text-white border-transparent' : 'bg-brand-surface text-brand-text-secondary border-brand-secondary-200 hover:bg-brand-secondary-50'}`}>
-                                        {nudge}
-                                    </button>
-                                ))}
-                            </div>
+                         <div className="my-6 p-4 bg-brand-secondary-50 border-2 border-dashed border-brand-secondary-200 rounded-lg">
+                            <h3 className="font-semibold text-brand-text-primary mb-2 flex items-center gap-2">
+                                <Icon name="sparkles" className="w-5 h-5 text-amber-500" />
+                                Get AI Suggestions
+                            </h3>
+                            <p className="text-sm text-brand-text-secondary mb-3">Describe the situation, and let our AI craft a thoughtful message for you.</p>
+                            <textarea
+                                value={aiContext}
+                                onChange={(e) => setAiContext(e.target.value)}
+                                placeholder="e.g., 'My friend just finished a huge project at work and seems exhausted...'"
+                                className="w-full p-2 bg-white border border-brand-secondary-300 placeholder-brand-secondary-400 rounded-md focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors text-sm"
+                                rows={2}
+                            />
+                            <button
+                                onClick={handleGenerateSuggestions}
+                                disabled={!aiContext.trim() || isGenerating}
+                                className="w-full mt-2 bg-brand-secondary-800 text-white font-semibold py-2 px-4 rounded-md hover:bg-brand-secondary-900 transition-colors disabled:bg-slate-300 flex items-center justify-center gap-2"
+                            >
+                                <Icon name={isGenerating ? 'loader' : 'sparkles'} className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                                {isGenerating ? 'Thinking...' : 'Generate Suggestions'}
+                            </button>
+                            {aiError && <p className="text-xs text-red-600 mt-2">{aiError}</p>}
+                             {aiSuggestions.length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                    <h4 className="text-sm font-semibold text-brand-text-secondary">Tap to use a suggestion:</h4>
+                                    {aiSuggestions.map((suggestion, index) => (
+                                        <button key={index} onClick={() => setMessage(suggestion)} className="w-full p-2 text-left text-sm rounded-lg border bg-amber-50 border-amber-200 hover:bg-amber-100 transition-colors">
+                                            {suggestion}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
+                        <textarea
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            placeholder="Or write your own message..."
+                            rows={3}
+                            className="w-full p-3 bg-brand-secondary-100 border border-transparent placeholder-brand-secondary-400 rounded-lg focus:bg-white focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors"
+                        />
                     </div>
                 </div>
+
+                {/* Footer */}
+                <div className="p-6 sm:p-8 flex-shrink-0 border-t border-brand-secondary-200 flex flex-col sm:flex-row gap-3">
+                    <button
+                        onClick={() => setIsScheduleModalOpen(true)}
+                        disabled={!recipient.trim() || !message.trim()}
+                        className="flex-1 bg-brand-secondary-100 text-brand-secondary-700 font-bold py-3 px-4 rounded-lg shadow-sm hover:bg-brand-secondary-200 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 interactive-scale"
+                    >
+                        <Icon name="bell" className="w-5 h-5" />
+                        Schedule Nudge
+                    </button>
+                    <button
+                        onClick={() => setIsConfirming(true)}
+                        disabled={!recipient.trim() || !message.trim()}
+                        className="flex-1 bg-brand-primary-500 text-white font-bold py-3 px-4 rounded-lg shadow-sm hover:bg-brand-primary-600 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 interactive-scale"
+                    >
+                        <Icon name="send" className="w-5 h-5" />
+                        Send Now
+                    </button>
+                </div>
             </div>
-            
-            <div className="fixed bottom-28 right-6 md:bottom-10 md:right-10 z-[60] flex flex-col md:flex-row gap-3">
-                 <button
-                    onClick={() => setIsScheduleModalOpen(true)}
-                    disabled={!recipient.trim() || !message.trim()}
-                    className="bg-brand-surface text-brand-text-primary font-bold py-3 px-4 rounded-full shadow-lg hover:bg-brand-secondary-50 transition-all transform hover:scale-105 disabled:bg-slate-300/80 disabled:scale-100 disabled:cursor-not-allowed interactive-scale flex items-center justify-center gap-2 border border-brand-secondary-200"
-                    aria-label="Schedule Nudge"
-                >
-                    <Icon name="bell" className="w-5 h-5"/>
-                    <span className="hidden md:inline">Schedule</span>
-                </button>
-                <button
-                    onClick={() => setIsConfirming(true)}
-                    disabled={!recipient.trim() || !message.trim()}
-                    className="bg-brand-secondary-800 text-white font-bold py-3 px-4 rounded-full shadow-lg hover:bg-brand-secondary-900 transition-all transform hover:scale-105 disabled:bg-slate-300 disabled:scale-100 disabled:cursor-not-allowed interactive-scale flex items-center justify-center gap-2"
-                >
-                    <span className="hidden md:inline">Send Now</span>
-                    <Icon name="send" className="w-5 h-5"/>
-                </button>
-            </div>
-            
+
             {renderActionModal()}
             <SyncContactsModal 
                 isOpen={isSyncModalOpen}
@@ -440,36 +437,24 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
                     }}
                 />
             )}
-            <ScheduleNudgeModal 
-                isOpen={isScheduleModalOpen}
-                onClose={() => setIsScheduleModalOpen(false)}
-                onSchedule={handleScheduleNudge}
-            />
-            <Modal
-                isOpen={isConfirming}
-                onClose={() => setIsConfirming(false)}
-                title="Confirm Your Nudge"
-            >
+            {isScheduleModalOpen && (
+                <ScheduleNudgeModal
+                    isOpen={isScheduleModalOpen}
+                    onClose={() => setIsScheduleModalOpen(false)}
+                    onSchedule={handleScheduleNudge}
+                />
+            )}
+             <Modal isOpen={isConfirming} onClose={() => setIsConfirming(false)} title="Confirm Nudge" size="sm">
                 <div>
-                    <p className="text-brand-text-secondary">You are about to send the following anonymous Nudge to:</p>
-                    <div className="my-2 p-3 bg-brand-secondary-100 rounded-lg font-semibold text-brand-text-primary text-center">
-                        {recipient}
-                    </div>
-                    <p className="text-brand-text-secondary mb-2">With the message:</p>
-                    <div className="p-4 bg-brand-secondary-100 rounded-lg text-brand-text-secondary text-center italic">
+                    <p className="text-brand-text-secondary mb-4">You are about to send the following Nudge to <span className="font-bold text-brand-text-primary">{recipient}</span>:</p>
+                    <div className="my-4 p-3 bg-brand-secondary-100 rounded-lg text-brand-text-secondary italic">
                         "{message}"
                     </div>
                     <div className="flex justify-end gap-3 mt-6">
-                        <button
-                            onClick={() => setIsConfirming(false)}
-                            className="px-4 py-2 text-sm font-semibold bg-brand-surface text-brand-text-secondary border border-brand-secondary-200 rounded-lg hover:bg-brand-secondary-100 interactive-scale"
-                        >
+                        <button onClick={() => setIsConfirming(false)} className="px-4 py-2 text-sm font-semibold bg-brand-surface text-brand-text-secondary border border-brand-secondary-200 rounded-lg hover:bg-brand-secondary-100 interactive-scale">
                             Cancel
                         </button>
-                        <button
-                            onClick={confirmAndSend}
-                            className="px-4 py-2 text-sm font-semibold bg-brand-primary-500 text-white rounded-lg hover:bg-brand-primary-600 flex items-center gap-2 interactive-scale"
-                        >
+                        <button onClick={confirmAndSend} className="px-4 py-2 text-sm font-semibold bg-brand-primary-500 text-white rounded-lg hover:bg-brand-primary-600 flex items-center gap-2 interactive-scale">
                             <Icon name="send" className="w-4 h-4" />
                             Confirm & Send
                         </button>

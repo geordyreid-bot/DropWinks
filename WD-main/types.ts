@@ -1,4 +1,8 @@
-import { Timestamp } from 'firebase/firestore';
+// Fix: Use firebase/compat/app for imports and types.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+
+export type Timestamp = firebase.firestore.Timestamp;
 
 export type Category = 'Physical' | 'Mental' | 'Nutritional' | 'Hygiene' | 'Social' | 'Behavioral';
 

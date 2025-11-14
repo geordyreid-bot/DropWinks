@@ -1,3 +1,5 @@
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { LandingPage } from './components/pages/LandingPage';
 import { Dashboard } from './components/pages/Dashboard';
@@ -5,9 +7,15 @@ import { Wink, Nudge, Page, InboxItem, Contact, ReactionType, CommunityExperienc
 import { MOCK_INBOX, MOCK_OUTBOX, MOCK_COMMUNITY_WINKS, MOCK_COMMUNITY_EXPERIENCES, MOCK_CONTACTS, findObservableById, MOCK_FORUMS } from './constants';
 import { TermsGate } from './components/ui/TermsGate';
 import { OnboardingFlow } from './components/OnboardingFlow';
+import { auth } from './firebase';
+// Fix: Use firebase/compat/app for imports and types.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+
 
 const VAPID_PUBLIC_KEY = 'BNo5Y_DoHi83Yd_AOR_nS52LSCzC2aYJ9YQIh2sS6Ca5X_VPYoqRfrk1d2cbj2wHWZWpDTCpBcegCZnSHfDi3mU';
-const ICON_DATA_URL = 'data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M50 10C50 10 15 45.82 15 62.5C15 79.92 30.67 90 50 90C69.33 90 85 79.92 85 62.5C85 45.82 50 10 50 10ZM58 60C58 66 68 66 68 60Z\' fill=\'%231e293b\'/%3E%3C/svg%3E';
+const ICON_DATA_URL = 'data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M50 10C50 10 15 45.82 15 62.5C15 79.92 30.67 90 50 90C69.33 90 85 79.92 85 62.5C85 45.82 50 10 50 10ZM58 60C58 66 68 66 68 60Z\' fill=\'%23000000\'/%3E%3C/svg%3E';
 
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     newWink: true,
@@ -36,7 +44,9 @@ export const App: React.FC = () => {
     const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
         return typeof window !== 'undefined' && window.localStorage.getItem('winkdrops_onboarding_completed') === 'true';
     });
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    // Fix: Use firebase.User type from compat library.
+    const [user, setUser] = useState<firebase.User | null>(null);
+    const [isAuthLoading, setIsAuthLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState<Page>('Dashboard');
     const [inbox, setInbox] = useState<InboxItem[]>(MOCK_INBOX);
     const [outbox, setOutbox] = useState<InboxItem[]>(MOCK_OUTBOX);
@@ -76,7 +86,16 @@ export const App: React.FC = () => {
     const [scheduledNudges, setScheduledNudges] = useState<ScheduledNudge[]>(() => {
         if (typeof window === 'undefined') return [];
         const saved = window.localStorage.getItem('winkdrops_scheduled_nudges');
-        return saved ? JSON.parse(saved) : [];
+        // We need to convert ISO strings back to Timestamp-like objects for consistency
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            return parsed.map((sn: any) => ({
+                ...sn,
+                // Fix: Use firebase.firestore.Timestamp from compat library.
+                sendAt: firebase.firestore.Timestamp.fromDate(new Date(sn.sendAt)),
+            }));
+        }
+        return [];
     });
 
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
@@ -87,6 +106,16 @@ export const App: React.FC = () => {
         const savedSettings = window.localStorage.getItem('winkdrops_notification_settings');
         return savedSettings ? JSON.parse(savedSettings) : DEFAULT_NOTIFICATION_SETTINGS;
     });
+
+    useEffect(() => {
+        // Fix: Use compat syntax for onAuthStateChanged.
+        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+            setUser(currentUser);
+            setIsAuthLoading(false);
+        });
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -108,7 +137,12 @@ export const App: React.FC = () => {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            window.localStorage.setItem('winkdrops_scheduled_nudges', JSON.stringify(scheduledNudges));
+            // Convert Timestamp to ISO string for JSON serialization
+            const serializableNudges = scheduledNudges.map(sn => ({
+                ...sn,
+                sendAt: sn.sendAt.toDate().toISOString(),
+            }));
+            window.localStorage.setItem('winkdrops_scheduled_nudges', JSON.stringify(serializableNudges));
         }
     }, [scheduledNudges]);
 
@@ -198,16 +232,20 @@ export const App: React.FC = () => {
         }
     }, [notificationPermission]);
 
-    const addWinkToOutbox = useCallback((wink: Wink) => {
-        setOutbox(prev => [wink, ...prev]);
+    const addWinkToOutbox = useCallback((wink: Omit<Wink, 'id' | 'timestamp'>) => {
+        // Fix: Use firebase.firestore.Timestamp from compat library.
+        const newWink = { ...wink, id: `wink-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
+        setOutbox(prev => [newWink, ...prev]);
         showLocalNotification(
             `A new Wink for ${wink.recipient} is ready.`,
             "Click here to view it in your outbox or add it to your home screen."
         , 'newWink');
     }, [showLocalNotification]);
 
-    const addNudgeToOutbox = useCallback((nudge: Nudge) => {
-        setOutbox(prev => [nudge, ...prev]);
+    const addNudgeToOutbox = useCallback((nudge: Omit<Nudge, 'id' | 'timestamp'>) => {
+        // Fix: Use firebase.firestore.Timestamp from compat library.
+        const newNudge = { ...nudge, id: `nudge-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
+        setOutbox(prev => [newNudge, ...prev]);
         showLocalNotification(
             `A new Nudge for ${nudge.recipient} has been sent.`,
             "Click to view or add WinkDrops to your home screen for easier access."
@@ -221,9 +259,10 @@ export const App: React.FC = () => {
             let hasChanged = false;
 
             const updatedNudges = scheduledNudges.flatMap(sn => {
-                const sendAt = new Date(sn.sendAt);
+                const sendAt = sn.sendAt.toDate();
                 if (sendAt <= now) {
                     hasChanged = true;
+                    // Pass the base nudge object, not the full scheduled nudge
                     addNudgeToOutbox(sn.nudge);
 
                     if (sn.recurrence === 'none') {
@@ -235,7 +274,8 @@ export const App: React.FC = () => {
                             case 'weekly': nextSendAt.setDate(nextSendAt.getDate() + 7); break;
                             case 'monthly': nextSendAt.setMonth(nextSendAt.getMonth() + 1); break;
                         }
-                        return [{ ...sn, sendAt: nextSendAt.toISOString() }];
+                        // Fix: Use firebase.firestore.Timestamp from compat library.
+                        return [{ ...sn, sendAt: firebase.firestore.Timestamp.fromDate(nextSendAt) }];
                     }
                 }
                 return [sn]; // Keep in list
@@ -250,11 +290,12 @@ export const App: React.FC = () => {
     }, [scheduledNudges, addNudgeToOutbox]);
 
 
-    const addScheduledNudge = useCallback((nudge: Nudge, sendAt: Date, recurrence: ScheduledNudge['recurrence']) => {
+    const addScheduledNudge = useCallback((nudge: Omit<Nudge, 'id' | 'timestamp'>, sendAt: Date, recurrence: ScheduledNudge['recurrence']) => {
         const newScheduledNudge: ScheduledNudge = {
             id: `sched-${Date.now()}`,
-            nudge,
-            sendAt: sendAt.toISOString(),
+            // Fix: Use firebase.firestore.Timestamp from compat library.
+            nudge: { ...nudge, id: `nudge-sched-${Date.now()}`, timestamp: firebase.firestore.Timestamp.fromDate(sendAt) },
+            sendAt: firebase.firestore.Timestamp.fromDate(sendAt),
             recurrence,
         };
         setScheduledNudges(prev => [...prev, newScheduledNudge]);
@@ -282,8 +323,10 @@ export const App: React.FC = () => {
         }));
     }, [showLocalNotification, outbox]);
 
-    const addCommunityExperience = useCallback((experience: CommunityExperience) => {
-        setCommunityExperiences(prev => [experience, ...prev]);
+    const addCommunityExperience = useCallback((experience: Omit<CommunityExperience, 'id'| 'timestamp'>) => {
+        // Fix: Use firebase.firestore.Timestamp from compat library.
+        const newExperience = { ...experience, id: `exp-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
+        setCommunityExperiences(prev => [newExperience, ...prev]);
     }, []);
 
     const markItemAsRead = useCallback((itemId: string) => {
@@ -305,10 +348,12 @@ export const App: React.FC = () => {
         setContacts(prev => prev.map(c => c.id === contactId ? { ...c, isBlocked } : c));
     }, []);
 
-    const handleAddContacts = useCallback((newContacts: Contact[]) => {
+    const handleAddContacts = useCallback((newContacts: Omit<Contact, 'id'>[]) => {
         setContacts(prevContacts => {
             const existingContacts = new Set(prevContacts.map(c => `${c.name}-${c.handle}`));
-            const uniqueNewContacts = newContacts.filter(nc => !existingContacts.has(`${nc.name}-${nc.handle}`));
+            const uniqueNewContacts = newContacts
+                .filter(nc => !existingContacts.has(`${nc.name}-${nc.handle}`))
+                .map((nc, index) => ({ ...nc, id: `contact-${Date.now()}-${index}` }));
             return [...prevContacts, ...uniqueNewContacts];
         });
     }, []);
@@ -349,7 +394,8 @@ export const App: React.FC = () => {
             winkId: wink!.id,
             originalRecipientName: wink!.recipient,
             winkObservables: wink!.observables,
-            timestamp: new Date(),
+            // Fix: Use firebase.firestore.Timestamp from compat library.
+            timestamp: firebase.firestore.Timestamp.now(),
             isRead: false,
         }));
         
@@ -393,7 +439,8 @@ export const App: React.FC = () => {
         setOutbox(prev => prev.map(item => {
             if (item.id === winkId && item.type === 'Wink') {
                 recipientName = item.recipient;
-                const newUpdates = updateTexts.map(text => ({ text, timestamp: new Date() }));
+                // Fix: Use firebase.firestore.Timestamp from compat library.
+                const newUpdates = updateTexts.map(text => ({ text, timestamp: firebase.firestore.Timestamp.now() }));
                 const existingUpdates = item.updates || [];
                 return {
                     ...item,
@@ -426,10 +473,12 @@ export const App: React.FC = () => {
         }
     }, []);
 
-    const handleAddForumMessage = useCallback((forumId: string, message: ForumMessage) => {
+    const handleAddForumMessage = useCallback((forumId: string, message: Omit<ForumMessage, 'id' | 'timestamp'>) => {
+        // Fix: Use firebase.firestore.Timestamp from compat library.
+        const newMessage = { ...message, id: `msg-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
         setForums(prev => ({
             ...prev,
-            [forumId]: [...(prev[forumId] || []), message]
+            [forumId]: [...(prev[forumId] || []), newMessage]
         }));
         
         // Simulate notifications
@@ -453,8 +502,21 @@ export const App: React.FC = () => {
         setHasCompletedOnboarding(true);
     };
     
-    if (!isLoggedIn) {
-        return <LandingPage onLogin={() => setIsLoggedIn(true)} />;
+    const handleLogout = () => {
+        // Fix: Use compat syntax for signOut.
+        auth.signOut().catch(error => console.error('Logout Error:', error));
+    };
+
+    if (isAuthLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen bg-brand-bg">
+                <div className="w-12 h-12 border-4 border-brand-primary-300 border-t-brand-primary-500 rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+    
+    if (!user) {
+        return <LandingPage />;
     }
     
     if (!hasAcceptedTerms) {
@@ -469,7 +531,7 @@ export const App: React.FC = () => {
         <Dashboard
             currentPage={currentPage}
             navigate={setCurrentPage}
-            onLogout={() => setIsLoggedIn(false)}
+            onLogout={handleLogout}
             inbox={inbox}
             outbox={outbox}
             communityWinks={communityWinks}

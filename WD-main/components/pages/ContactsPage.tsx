@@ -171,7 +171,7 @@ export const ContactsPage: React.FC<ContactsPageProps> = ({ contacts, onDeleteCo
                 </div>
                 
                 {/* Content */}
-                <div className="px-6 sm:px-8 pb-4">
+                <div className="px-6 sm:p-8 pb-4">
                     <div className="flex flex-col sm:flex-row gap-3 mb-4">
                          <div className="relative flex-grow">
                             <input
@@ -193,7 +193,7 @@ export const ContactsPage: React.FC<ContactsPageProps> = ({ contacts, onDeleteCo
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-6 themed-scrollbar">
+                <div className="flex-1 overflow-y-auto px-6 sm:p-8 themed-scrollbar">
                     {contacts.length > 0 ? (
                         <div className="space-y-4">
                             {sortedGroups.map(letter => (

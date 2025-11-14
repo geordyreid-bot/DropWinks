@@ -434,7 +434,7 @@ export const WinkComposer: React.FC<WinkComposerProps> = ({ onWinkSent, navigate
                 </div>
 
                 {/* Content */}
-                <div ref={contentRef} className="flex-1 overflow-y-auto px-6 sm:px-8 pt-4 pb-28">
+                <div ref={contentRef} className="flex-1 overflow-y-auto px-6 sm:p-8">
                     {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 flex items-center gap-3">
                             <Icon name="warning" className="w-5 h-5"/>
@@ -723,35 +723,38 @@ export const WinkComposer: React.FC<WinkComposerProps> = ({ onWinkSent, navigate
                 </div>
                 
                 {/* Floating Action Buttons */}
-                {step === 1 && !isLoading && (
-                    <button
-                        onClick={handleNext}
-                        disabled={!recipient.trim()}
-                        className="absolute bottom-28 right-6 md:bottom-10 md:right-10 z-10 bg-brand-primary-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-brand-primary-600 transition-all transform hover:scale-105 disabled:bg-slate-300 disabled:scale-100 disabled:cursor-not-allowed interactive-scale flex items-center gap-2"
-                    >
-                        Next
-                        <Icon name="arrowRight" className="w-5 h-5"/>
-                    </button>
-                )}
-                {step === 2 && !isLoading && (
-                    <button
-                        onClick={handleGenerate}
-                        disabled={selectedObservables.length === 0}
-                        className="absolute bottom-28 right-6 md:bottom-10 md:right-10 z-10 bg-brand-primary-500 text-white rounded-full p-4 shadow-lg hover:bg-brand-primary-600 transition-transform transform hover:scale-110 disabled:bg-slate-300 disabled:scale-100 disabled:cursor-not-allowed interactive-scale"
-                        aria-label="Generate Preview"
-                    >
-                        <Icon name="arrowRight" className="w-6 h-6" />
-                    </button>
-                )}
-                {step === 3 && aiContent && !isSending && (
-                    <button
-                        onClick={handleSendWink}
-                        className="absolute bottom-28 right-6 md:bottom-10 md:right-10 z-10 bg-brand-primary-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-brand-primary-600 transition-all transform hover:scale-105 interactive-scale flex items-center justify-center gap-2"
-                    >
-                        Drop Wink
-                        <Icon name="send" className="w-5 h-5"/>
-                    </button>
-                )}
+                <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-brand-surface/80 backdrop-blur-sm border-t border-brand-secondary-200/80">
+                     {step === 1 && !isLoading && (
+                        <button
+                            onClick={handleNext}
+                            disabled={!recipient.trim()}
+                            className="w-full bg-brand-primary-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-brand-primary-600 transition-all transform hover:scale-105 disabled:bg-slate-300 disabled:scale-100 disabled:cursor-not-allowed interactive-scale flex items-center justify-center gap-2"
+                        >
+                            Next
+                            <Icon name="arrowRight" className="w-5 h-5"/>
+                        </button>
+                    )}
+                    {step === 2 && !isLoading && (
+                        <button
+                            onClick={handleGenerate}
+                            disabled={selectedObservables.length === 0}
+                            className="w-full bg-brand-primary-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-brand-primary-600 transition-all transform hover:scale-105 disabled:bg-slate-300 disabled:scale-100 disabled:cursor-not-allowed interactive-scale flex items-center justify-center gap-2"
+                            aria-label="Generate Preview"
+                        >
+                            Generate Preview
+                           <Icon name="arrowRight" className="w-5 h-5" />
+                        </button>
+                    )}
+                    {step === 3 && aiContent && !isSending && (
+                        <button
+                            onClick={handleSendWink}
+                            className="w-full bg-brand-primary-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-brand-primary-600 transition-all transform hover:scale-105 interactive-scale flex items-center justify-center gap-2"
+                        >
+                            Drop Wink
+                            <Icon name="send" className="w-5 h-5"/>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {renderActionModal()}

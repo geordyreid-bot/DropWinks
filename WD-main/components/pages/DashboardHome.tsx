@@ -1,7 +1,9 @@
+
+
 import React, { useState, useEffect } from 'react';
-import { Page, Wink, Nudge, InboxItem, SecondOpinionRequest, ScheduledNudge } from '../../types';
+// Fix: Use Timestamp type from the local types file for consistency with the compat library.
+import { Page, Wink, Nudge, InboxItem, SecondOpinionRequest, ScheduledNudge, Timestamp } from '../../types';
 import { Icon } from '../ui/Icon';
-import { Timestamp } from 'firebase/firestore';
 
 interface DashboardHomeProps {
     navigate: (page: Page) => void;
