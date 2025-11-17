@@ -11,8 +11,7 @@ import { SyncContactsModal } from './ui/SyncContactsModal';
 import { ContactEditModal } from './ui/ContactEditModal';
 
 interface WinkComposerProps {
-    // Fix: Correct prop type to match what the parent component `addWinkToOutbox` expects.
-    onWinkSent: (wink: Omit<Wink, 'id' | 'timestamp'>) => void;
+    onWinkSent: (wink: Wink) => void;
     navigate: (page: Page) => void;
     contacts: Contact[];
     onDeleteContact: (contactId: string) => void;
@@ -269,13 +268,13 @@ export const WinkComposer: React.FC<WinkComposerProps> = ({ onWinkSent, navigate
         if (!aiContent) return;
         setIsSending(true);
 
-        // Fix: Create an object that matches the `onWinkSent` prop type.
-        // The parent component (`App.tsx`) is responsible for adding the id and timestamp.
-        const newWink: Omit<Wink, 'id' | 'timestamp'> = {
+        const newWink: Wink = {
+            id: `wink-${Date.now()}`,
             type: 'Wink',
             recipient,
             observables: selectedObservables,
             aiContent,
+            timestamp: new Date(),
             isRead: false,
         };
 
@@ -766,87 +765,4 @@ export const WinkComposer: React.FC<WinkComposerProps> = ({ onWinkSent, navigate
                 onSyncDeviceContacts={handleSyncDeviceContacts}
                 isSyncingDevice={isSyncing}
             />
-            {editingContact && (
-                <ContactEditModal
-                    isOpen={!!editingContact}
-                    onClose={() => setEditingContact(null)}
-                    contact={editingContact}
-                    onSave={(updatedContact) => {
-                        onEditContact(updatedContact);
-                        setEditingContact(null);
-                    }}
-                />
-            )}
-             <Modal
-                isOpen={isAddingCustom}
-                onClose={() => setIsAddingCustom(false)}
-                title="Add Custom Observation"
-            >
-                <div>
-                    <p className="text-brand-text-secondary mb-4">Describe the observation in your own words and assign it to a category.</p>
-                     {moderationError && (
-                        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-r-lg mb-4 text-sm" role="alert">
-                            <p className="font-bold">Content Rejected</p>
-                            <p>{moderationError}</p>
-                        </div>
-                    )}
-                     <div>
-                        <label htmlFor="custom-obs-text" className="block text-sm font-semibold text-brand-text-primary mb-1.5">Observation</label>
-                        <textarea
-                            id="custom-obs-text"
-                            value={customObservable.text}
-                            onChange={(e) => {
-                                setCustomObservable(prev => ({ ...prev, text: e.target.value }));
-                                if (moderationError) {
-                                    setModerationError(null);
-                                }
-                            }}
-                            placeholder="E.g., 'Seems to be avoiding conversations about the future...'"
-                            className="w-full p-2 bg-white border border-brand-secondary-300 placeholder-brand-secondary-400 rounded-md focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors text-sm"
-                            rows={3}
-                        />
-                    </div>
-                     <div className="mt-4">
-                        <label htmlFor="custom-obs-category" className="block text-sm font-semibold text-brand-text-primary mb-1.5">Category</label>
-                        <select
-                             id="custom-obs-category"
-                             value={customObservable.category}
-                             onChange={(e) => setCustomObservable(prev => ({ ...prev, category: e.target.value as Category }))}
-                             className="w-full p-2 bg-white border border-brand-secondary-300 rounded-md focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors text-sm"
-                        >
-                            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                        </select>
-                    </div>
-                    <div className="mt-4">
-                        <label htmlFor="custom-obs-negative-keywords" className="block text-sm font-semibold text-brand-text-primary mb-1.5">Negative Keywords (Optional)</label>
-                        <input
-                            id="custom-obs-negative-keywords"
-                            type="text"
-                            value={customObservable.negativeKeywords}
-                            onChange={(e) => setCustomObservable(prev => ({ ...prev, negativeKeywords: e.target.value }))}
-                            placeholder="e.g., anxiety, medical terms"
-                            className="w-full p-2 bg-white border border-brand-secondary-300 placeholder-brand-secondary-400 rounded-md focus:border-brand-primary-300 focus:ring-1 focus:ring-brand-primary-300 transition-colors text-sm"
-                        />
-                        <p className="text-xs text-brand-text-secondary mt-1">Comma-separated words to exclude from AI analysis.</p>
-                    </div>
-                    <div className="flex justify-end gap-3 mt-6">
-                        <button
-                            onClick={() => setIsAddingCustom(false)}
-                            className="px-4 py-2 text-sm font-semibold bg-brand-surface text-brand-text-secondary border border-brand-secondary-200 rounded-lg hover:bg-brand-secondary-100 interactive-scale"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleAddCustomObservable}
-                             disabled={!customObservable.text.trim() || isModerating}
-                            className="px-4 py-2 text-sm font-semibold bg-brand-primary-500 text-white rounded-lg hover:bg-brand-primary-600 flex items-center gap-2 interactive-scale disabled:bg-slate-300"
-                        >
-                            {isModerating ? <Icon name="loader" className="w-4 h-4 animate-spin" /> : <Icon name="plusCircle" className="w-4 h-4" />}
-                            {isModerating ? 'Verifying...' : 'Add Observation'}
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-        </div>
-    );
-};
+            

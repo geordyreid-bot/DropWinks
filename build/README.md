@@ -10,7 +10,6 @@ This `build` directory contains the complete, production-ready static output for
 - **`firebaseConfig.js`**: A placeholder for your Firebase project configuration.
 - **`favicon.ico`, `icon-192.png`, `icon-512.png`**: App icons for various platforms.
 - **`assets/`**: A directory containing the bundled JavaScript (`main.js`), CSS (`styles.css`), and other static images.
-- **`build.zip`**: A placeholder for the complete zipped archive of this folder.
 
 ---
 

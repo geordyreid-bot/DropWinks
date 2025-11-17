@@ -102,6 +102,9 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
+const ICON_DATA_URL = "data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10C50 10 15 45.82 15 62.5C15 79.92 30.67 90 50 90C69.33 90 85 79.92 85 62.5C85 45.82 50 10 50 10ZM58 60C58 66 68 66 68 60Z' fill='%23000000'/%3E%3C/svg%3E";
+
+
 // Only initialize if the config has been filled out
 if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
   try {
@@ -115,8 +118,8 @@ if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
       const notificationTitle = payload.notification.title || 'New Winkdrop';
       const notificationOptions = {
         body: payload.notification.body || 'You have a new message.',
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        icon: ICON_DATA_URL,
+        badge: ICON_DATA_URL,
       };
 
       self.registration.showNotification(notificationTitle, notificationOptions);

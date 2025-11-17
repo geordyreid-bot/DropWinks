@@ -5,9 +5,6 @@ import { generateWinkContent, generateObservableSuggestions } from '../services/
 import { Icon } from './ui/Icon';
 import { WinkDetailView } from './WinkDetailView';
 import { MentalHealthDisclaimer } from './ui/MentalHealthDisclaimer';
-// Fix: Import firebase to use Firestore Timestamp.
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
 
 
 interface SelfCheckinProps {
@@ -128,9 +125,7 @@ export const SelfCheckin: React.FC<SelfCheckinProps> = ({ navigate }) => {
     if (aiContent) {
         const mockWinkForDisplay: Wink = {
             id: 'self-checkin-wink', type: 'Wink', recipient: 'You',
-            observables: selectedObservables, aiContent, 
-            // Fix: Use firebase.firestore.Timestamp.now() instead of new Date() to match the 'Wink' type.
-            timestamp: firebase.firestore.Timestamp.now(), isRead: true,
+            observables: selectedObservables, aiContent, timestamp: new Date(), isRead: true,
         };
         return (
             <div ref={selfCheckinRef} className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">

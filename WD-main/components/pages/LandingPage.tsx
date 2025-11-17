@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import { Icon } from '../ui/Icon';
 import { PhoneMockup } from '../PhoneMockup';
@@ -59,8 +56,8 @@ const AnimatedLogo = () => {
     );
 };
 
-const Section: React.FC<{ children: React.ReactNode, className?: string, isPadded?: boolean }> = ({ children, className = '', isPadded = true }) => (
-    <section className={`${isPadded ? 'py-16 md:py-24' : ''} ${className}`}>
+const Section: React.FC<{ children: React.ReactNode, className?: string, isPadded?: boolean, id?: string }> = ({ children, className = '', isPadded = true, id }) => (
+    <section id={id} className={`${isPadded ? 'py-16 md:py-24' : ''} ${className}`}>
         <div className="w-full max-w-5xl mx-auto px-6">
             {children}
         </div>
@@ -68,7 +65,7 @@ const Section: React.FC<{ children: React.ReactNode, className?: string, isPadde
 );
 
 const FeatureCard: React.FC<{ icon: React.ComponentProps<typeof Icon>['name'], title: string, children: React.ReactNode }> = ({ icon, title, children }) => (
-    <div className="flex flex-col items-center text-center p-6 bg-white/50 rounded-2xl shadow-lg border border-white/50 backdrop-blur-lg h-full">
+    <div className="flex flex-col items-center text-center p-6 bg-white/50 rounded-2xl shadow-lg border border-white/50 backdrop-blur-lg h-full transition-transform duration-300 hover:scale-105">
         <div className="w-16 h-16 bg-brand-primary-100 text-brand-primary-500 rounded-full flex items-center justify-center mb-4 flex-shrink-0">
             <Icon name={icon} className="w-8 h-8" />
         </div>
@@ -76,6 +73,49 @@ const FeatureCard: React.FC<{ icon: React.ComponentProps<typeof Icon>['name'], t
         <p className="text-brand-text-secondary">{children}</p>
     </div>
 );
+
+const TestimonialCarousel: React.FC<{
+    testimonials: { text: string, author: string, role: string }[];
+    title: string;
+}> = ({ testimonials, title }) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setActiveIndex(prev => (prev + 1) % testimonials.length);
+        }, 7000);
+        return () => clearInterval(timer);
+    }, [testimonials.length]);
+
+    return (
+        <div className="scroll-animate">
+            <h3 className="text-2xl md:text-3xl font-bold text-brand-text-primary text-center mb-8">{title}</h3>
+            <div className="relative min-h-[18rem] md:min-h-[16rem]">
+                {testimonials.map((testimonial, index) => (
+                    <div
+                        key={index}
+                        className={`absolute inset-0 transition-opacity duration-1000 ${activeIndex === index ? 'opacity-100' : 'opacity-0'}`}
+                    >
+                        <TestimonialCard {...testimonial} />
+                    </div>
+                ))}
+            </div>
+             <div className="flex justify-center gap-2 mt-6">
+                {testimonials.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setActiveIndex(index)}
+                        className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                            activeIndex === index ? 'bg-brand-primary-500' : 'bg-brand-secondary-300 hover:bg-brand-secondary-400'
+                        }`}
+                        aria-label={`Go to testimonial ${index + 1}`}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
+
 
 const TestimonialCard: React.FC<{ text: string, author: string, role: string }> = ({ text, author, role }) => (
     <div className="bg-brand-surface p-8 rounded-2xl shadow-xl border border-brand-secondary-200/50 h-full flex flex-col">
@@ -93,11 +133,10 @@ const ExpertPanel: React.FC = () => {
         { icon: 'shieldCheck' as const, name: 'Physicians' },
         { icon: 'brain' as const, name: 'Therapists' },
         { icon: 'helpCircle' as const, name: 'Counsellors' },
-        { icon: 'scale' as const, name: 'Lawyers' },
         { icon: 'bookOpen' as const, name: 'Educators' },
     ];
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {experts.map(expert => (
                 <div key={expert.name} className="flex flex-col items-center">
                     <div className="w-20 h-20 bg-brand-surface text-brand-primary-500 rounded-full flex items-center justify-center mb-3 shadow-lg border border-brand-secondary-200/50">
@@ -279,25 +318,27 @@ const AuthModal: React.FC<AuthModalProps> = ({ type, onClose, setModal }) => {
 
 
 export const LandingPage: React.FC = () => {
-    const [showContent, setShowContent] = useState(false);
     const [modal, setModal] = useState<'login' | 'signup' | null>(null);
     const [isTourOpen, setIsTourOpen] = useState(false);
 
-    const testimonials = [
+    const userTestimonials = [
          {
             text: "Getting a Wink was a turning point. It made me realize I wasn't hiding my struggles as well as I thought, but also that someone cared enough to reach out. It gave me the courage to talk to a professional.",
             author: "Anonymous User",
             role: "Wink Recipient",
         },
         {
-            text: "WinkDrops addresses a critical challenge in mental health support: initiating the conversation. It provides a non-confrontational 'first step' that can empower individuals.",
-            author: "Dr. Anya Sharma",
-            role: "Licensed Therapist",
-        },
-        {
             text: "I was so anxious about a friend, and WinkDrop let me break the ice without making things awkward. They actually brought it up to me later and we had a real conversation. So grateful.",
             author: "Anonymous User",
             role: "Wink Sender",
+        },
+    ];
+    
+    const professionalTestimonials = [
+        {
+            text: "WinkDrops addresses a critical challenge in mental health support: initiating the conversation. It provides a non-confrontational 'first step' that can empower individuals.",
+            author: "Dr. Anya Sharma",
+            role: "Licensed Therapist",
         },
         {
             text: "I see students every day who notice their friends are struggling but are afraid to say the wrong thing. This tool gives them a safe, supportive way to express concern.",
@@ -305,22 +346,6 @@ export const LandingPage: React.FC = () => {
             role: "High School Counselor",
         },
     ];
-
-    const [activeTestimonial, setActiveTestimonial] = useState(0);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setActiveTestimonial(prev => (prev + 1) % testimonials.length);
-        }, 7000); // 7 seconds per testimonial
-        return () => clearInterval(timer);
-    }, [testimonials.length]);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setShowContent(true);
-        }, 1800);
-        return () => clearTimeout(timer);
-    }, []);
 
      useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
@@ -336,62 +361,117 @@ export const LandingPage: React.FC = () => {
 
         return () => elements.forEach(el => observer.unobserve(el));
     }, []);
+
+    const scrollToContent = () => {
+        document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth' });
+    };
     
 
     return (
         <div className="bg-brand-bg min-h-screen overflow-x-hidden">
             <main>
-                <Section className="relative pt-32 pb-16 md:pt-48 md:pb-24 overflow-hidden">
+                <section className="relative min-h-screen flex flex-col items-center justify-center p-6 overflow-hidden">
                     <div className="absolute -top-32 -left-32 w-96 h-96 bg-brand-primary-200/50 rounded-full filter blur-3xl opacity-60"></div>
                     <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-brand-accent-300/50 rounded-full filter blur-3xl opacity-60"></div>
                     <div className="relative z-10 text-center flex flex-col items-center">
                         <AnimatedLogo />
-                        {showContent && (
-                            <div className="animate-fade-in-up">
-                                <h1 className="text-4xl md:text-5xl font-bold text-brand-text-primary mt-8 max-w-3xl mx-auto">
-                                    Gentle gestures, Anonymously.
-                                </h1>
-                                <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-                                    <button onClick={() => setModal('login')} className="font-semibold bg-brand-primary-500 text-white py-3 px-8 rounded-full shadow-lg hover:bg-brand-primary-600 transition-colors interactive-scale">
-                                        Log In
-                                    </button>
-                                    <button onClick={() => setModal('signup')} className="font-semibold bg-brand-secondary-800 text-white py-3 px-8 rounded-full shadow-lg hover:bg-black transition-colors interactive-scale">
-                                        Sign Up
-                                    </button>
-                                </div>
-                                 <button onClick={() => setIsTourOpen(true)} className="mt-8 font-semibold text-brand-text-primary hover:text-brand-primary-600 transition-colors flex items-center gap-2 interactive-scale mx-auto">
-                                    <Icon name="helpCircle" className="w-5 h-5" /> Take a Tour
-                                </button>
-                            </div>
-                        )}
+                        <h1
+                            className="text-4xl md:text-5xl font-bold text-brand-text-primary mt-8 max-w-3xl mx-auto animate-fade-in-up"
+                            style={{ animationDelay: '1800ms', animationFillMode: 'backwards' }}
+                        >
+                            Gentle gestures,
+                            <br />
+                            Anonymously.
+                        </h1>
+                        <div
+                            className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4 animate-fade-in-up"
+                            style={{ animationDelay: '2000ms', animationFillMode: 'backwards' }}
+                        >
+                            <button onClick={() => setModal('login')} className="font-semibold bg-brand-primary-500 text-white py-3 px-8 rounded-full shadow-lg hover:bg-brand-primary-600 transition-colors interactive-scale">
+                                Log In
+                            </button>
+                            <button onClick={() => setModal('signup')} className="font-semibold bg-brand-secondary-800 text-white py-3 px-8 rounded-full shadow-lg hover:bg-black transition-colors interactive-scale">
+                                Sign Up
+                            </button>
+                        </div>
+                        <button
+                            onClick={() => setIsTourOpen(true)}
+                            className="mt-8 font-semibold text-brand-text-primary hover:text-brand-primary-600 transition-colors flex items-center gap-2 interactive-scale mx-auto animate-fade-in-up"
+                            style={{ animationDelay: '2200ms', animationFillMode: 'backwards' }}
+                        >
+                            <Icon name="helpCircle" className="w-5 h-5" /> Take a Tour
+                        </button>
                     </div>
-                </Section>
+                     <button
+                        onClick={scrollToContent}
+                        className="absolute bottom-10 z-20 text-brand-text-secondary animate-bounce-slow animate-fade-in"
+                        style={{ animationDelay: '2500ms', animationFillMode: 'backwards' }}
+                        aria-label="Scroll down to content"
+                    >
+                        <Icon name="chevronDown" className="w-8 h-8" />
+                    </button>
+                </section>
                 
-                <Section isPadded={false} className="relative">
-                    <div className="scroll-animate is-visible">
-                        <PhoneMockup />
+                <Section id="main-content" isPadded={true} className="relative">
+                    <div className="grid md:grid-cols-2 gap-8 items-center">
+                        <div className="text-center md:text-left px-6 scroll-animate is-visible">
+                             <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary">Turn Concern into Connection</h2>
+                             <p className="text-md text-brand-text-secondary mt-3">WinkDrops helps you bridge the gap when you're worried about someone, but don't know what to say.</p>
+                             <div className="mt-8 space-y-6">
+                                <div className="flex items-start gap-4 text-left">
+                                    <div className="w-12 h-12 bg-brand-primary-100 text-brand-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Icon name="shieldCheck" className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-brand-text-primary">Anonymous & Private</h4>
+                                        <p className="text-sm text-brand-text-secondary">Your identity is always protected. The recipient never knows who sent the Wink, allowing them to focus on the message, not the messenger.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-4 text-left">
+                                    <div className="w-12 h-12 bg-brand-primary-100 text-brand-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Icon name="sparkles" className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-brand-text-primary">AI-Powered Insights</h4>
+                                        <p className="text-sm text-brand-text-secondary">Our AI transforms your simple observations into a supportive message with helpful, non-alarming resources, making it easy to offer meaningful support.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-4 text-left">
+                                    <div className="w-12 h-12 bg-brand-primary-100 text-brand-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Icon name="settings" className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-brand-text-primary">You're in Control</h4>
+                                        <p className="text-sm text-brand-text-secondary">From private self-check-ins to simple 'Nudges,' WinkDrops provides a suite of tools for you to use as you see fit.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="scroll-animate is-visible" style={{ transitionDelay: '200ms' }}>
+                            <PhoneMockup />
+                        </div>
                     </div>
                 </Section>
 
                 <Section className="bg-brand-secondary-100/50">
                     <div className="text-center max-w-3xl mx-auto">
                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary scroll-animate">How it Works</h2>
-                        <p className="text-md text-brand-text-secondary mt-3 scroll-animate" style={{ transitionDelay: '100ms' }}>A simple, three-step process to turn concern into connection.</p>
+                        <p className="text-md text-brand-text-secondary mt-3 scroll-animate" style={{ transitionDelay: '100ms' }}>A simple process to turn concern into connection.</p>
                     </div>
                     <div className="grid md:grid-cols-3 gap-8 mt-12 scroll-animate-stagger">
                         <div style={{ '--stagger-delay': '200ms' }}>
                             <FeatureCard icon="eye" title="1. You Observe">
-                                Select what you've noticed from a private list of observations—from physical signs to behavioral changes. It’s quick, simple, and non-judgmental.
+                                Select from a private list of observations. It’s quick, simple, and non-judgmental.
                             </FeatureCard>
                         </div>
                          <div style={{ '--stagger-delay': '300ms' }}>
                             <FeatureCard icon="sparkles" title="2. AI Provides Insights">
-                                Our AI analyzes your selections and prepares a gentle message with potential insights and helpful, vetted resources. It's supportive, not alarming.
+                                Our AI prepares a gentle message with helpful resources. It's supportive, not alarming.
                             </FeatureCard>
                         </div>
                          <div style={{ '--stagger-delay': '400ms' }}>
                             <FeatureCard icon="shieldCheck" title="3. They Receive Support">
-                                Your friend receives a completely anonymous message of support, giving them the privacy to explore resources and reflect without pressure.
+                                Your friend receives an anonymous message, giving them privacy to reflect without pressure.
                             </FeatureCard>
                         </div>
                     </div>
@@ -400,25 +480,14 @@ export const LandingPage: React.FC = () => {
                 <Section>
                      <div className="text-center max-w-3xl mx-auto">
                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary scroll-animate">Developed with Expert Input</h2>
-                        <p className="text-md text-brand-text-secondary mt-3 scroll-animate" style={{ transitionDelay: '100ms' }}>Our framework is developed with input from physicians, therapists, counsellors, lawyers, and educators to ensure our approach is responsible, safe, and genuinely helpful.</p>
+                        <p className="text-md text-brand-text-secondary mt-3 scroll-animate" style={{ transitionDelay: '100ms' }}>Our framework is developed with input from physicians, therapists, counsellors, and educators to ensure our approach is responsible, safe, and genuinely helpful.</p>
                     </div>
                     <div className="mt-12 scroll-animate" style={{ transitionDelay: '200ms' }}>
                         <ExpertPanel />
                     </div>
-                    <div className="mt-24 text-center max-w-3xl mx-auto">
-                         <h2 className="text-3xl md:text-4xl font-bold text-brand-text-primary scroll-animate">Trusted by Users & Professionals</h2>
-                    </div>
-                    <div className="mt-12 max-w-3xl mx-auto scroll-animate" style={{ transitionDelay: '200ms' }}>
-                        <div className="relative h-72 md:h-64">
-                            {testimonials.map((testimonial, index) => (
-                                <div
-                                    key={index}
-                                    className={`absolute inset-0 transition-opacity duration-1000 ${activeTestimonial === index ? 'opacity-100' : 'opacity-0'}`}
-                                >
-                                    <TestimonialCard {...testimonial} />
-                                </div>
-                            ))}
-                        </div>
+                    <div className="grid md:grid-cols-2 gap-12 mt-24">
+                        <TestimonialCarousel title="From Our Users" testimonials={userTestimonials} />
+                        <TestimonialCarousel title="From Professionals" testimonials={professionalTestimonials} />
                     </div>
                 </Section>
                 

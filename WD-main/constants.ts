@@ -1,4 +1,7 @@
 import { Observable, Category, Wink, Nudge, Contact, InboxItem, ReactionType, CommunityExperience, SocialMediaPost, ForumMessage } from './types';
+// Fix: Import firebase to use Firestore Timestamp for mock data.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 
 export const CATEGORIES: Category[] = ['Physical', 'Mental', 'Nutritional', 'Hygiene', 'Social', 'Behavioral'];
 
@@ -146,19 +149,20 @@ export const OBSERVABLES: Observable[] = [
 
 export const MOCK_FORUMS: Record<string, ForumMessage[]> = {
     "Burnout": [
-        { id: 'b1', userId: 'user_scarlet_cat', userName: 'ScarletCat', text: "I feel so drained all the time. Just... empty. Anyone else?", timestamp: new Date(Date.now() - 3600000 * 2), avatarColor: 'bg-red-200' },
-        { id: 'b2', userId: 'user_azure_dog', userName: 'AzureDog', text: "Yes. It feels like nothing I do matters at work anymore. I used to love my job.", timestamp: new Date(Date.now() - 3600000 * 1.5), avatarColor: 'bg-sky-200' },
-        { id: 'b3', userId: 'user_emerald_owl', userName: 'EmeraldOwl', text: "Same. I'm so irritable with my family and I hate it. I just have no energy left for them.", timestamp: new Date(Date.now() - 3600000 * 1), avatarColor: 'bg-emerald-200' },
-        { id: 'b4', userId: 'user_amber_fox', userName: 'AmberFox', text: "For anyone struggling, taking a real break (not just a weekend) helped me a little. It's hard but necessary.", timestamp: new Date(Date.now() - 3600000 * 0.5), avatarColor: 'bg-amber-200' },
+        // Fix: Use Firestore Timestamp for consistency.
+        { id: 'b1', userId: 'user_scarlet_cat', userName: 'ScarletCat', text: "I feel so drained all the time. Just... empty. Anyone else?", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 2)), avatarColor: 'bg-red-200' },
+        { id: 'b2', userId: 'user_azure_dog', userName: 'AzureDog', text: "Yes. It feels like nothing I do matters at work anymore. I used to love my job.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 1.5)), avatarColor: 'bg-sky-200' },
+        { id: 'b3', userId: 'user_emerald_owl', userName: 'EmeraldOwl', text: "Same. I'm so irritable with my family and I hate it. I just have no energy left for them.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 1)), avatarColor: 'bg-emerald-200' },
+        { id: 'b4', userId: 'user_amber_fox', userName: 'AmberFox', text: "For anyone struggling, taking a real break (not just a weekend) helped me a little. It's hard but necessary.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 0.5)), avatarColor: 'bg-amber-200' },
     ],
     "Depression": [
-        { id: 'd1', userId: 'user_indigo_ray', userName: 'IndigoRay', text: "Does anyone else have days where just getting out of bed feels impossible? It's not about being tired, it's... heavy.", timestamp: new Date(Date.now() - 86400000 * 1), avatarColor: 'bg-indigo-200' },
-        { id: 'd2', userId: 'user_rose_finch', userName: 'RoseFinch', text: "All the time. And then the guilt for not being 'productive' makes it even worse. It's a vicious cycle.", timestamp: new Date(Date.now() - 3600000 * 18), avatarColor: 'bg-rose-200' },
-        { id: 'd3', userId: 'user_slate_mole', userName: 'SlateMole', text: "Losing interest in things I used to love is the hardest part for me. Everything feels gray.", timestamp: new Date(Date.now() - 3600000 * 10), avatarColor: 'bg-slate-200' },
+        { id: 'd1', userId: 'user_indigo_ray', userName: 'IndigoRay', text: "Does anyone else have days where just getting out of bed feels impossible? It's not about being tired, it's... heavy.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 86400000 * 1)), avatarColor: 'bg-indigo-200' },
+        { id: 'd2', userId: 'user_rose_finch', userName: 'RoseFinch', text: "All the time. And then the guilt for not being 'productive' makes it even worse. It's a vicious cycle.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 18)), avatarColor: 'bg-rose-200' },
+        { id: 'd3', userId: 'user_slate_mole', userName: 'SlateMole', text: "Losing interest in things I used to love is the hardest part for me. Everything feels gray.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 10)), avatarColor: 'bg-slate-200' },
     ],
     "Anxiety": [
-        { id: 'a1', userId: 'user_teal_turtle', userName: 'TealTurtle', text: "My heart races for no reason. It's so frustrating. Does anyone have tips for calming down in the moment?", timestamp: new Date(Date.now() - 3600000 * 5), avatarColor: 'bg-teal-200' },
-        { id: 'a2', userId: 'user_fuchsia_frog', userName: 'FuchsiaFrog', text: "The 5-4-3-2-1 grounding technique sometimes helps me. 5 things you can see, 4 you can touch, etc. It brings me back to the present.", timestamp: new Date(Date.now() - 3600000 * 4), avatarColor: 'bg-fuchsia-200' },
+        { id: 'a1', userId: 'user_teal_turtle', userName: 'TealTurtle', text: "My heart races for no reason. It's so frustrating. Does anyone have tips for calming down in the moment?", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 5)), avatarColor: 'bg-teal-200' },
+        { id: 'a2', userId: 'user_fuchsia_frog', userName: 'FuchsiaFrog', text: "The 5-4-3-2-1 grounding technique sometimes helps me. 5 things you can see, 4 you can touch, etc. It brings me back to the present.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 4)), avatarColor: 'bg-fuchsia-200' },
     ],
     "Stress": [],
     "Grief": [],
@@ -207,7 +211,8 @@ const MOCK_WINK_TEMPLATE: Wink = {
         findObservableById('b3'),
     ],
     aiContent: AI_GENERATED_CONTENT_MOCK,
-    timestamp: new Date(Date.now() - 86400000 * 2),
+    // Fix: Use Firestore Timestamp for consistency.
+    timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 86400000 * 2)),
     isRead: true,
 };
 
@@ -218,8 +223,9 @@ export const MOCK_INBOX: InboxItem[] = [];
 export const MOCK_OUTBOX: InboxItem[] = [];
 
 export const MOCK_COMMUNITY_EXPERIENCES: CommunityExperience[] = [
-    { id: 'exp1', text: "Getting a Wink was a turning point. It made me realize I wasn't hiding my struggles as well as I thought, but also that someone cared enough to reach out. It gave me the courage to talk to a professional.", timestamp: new Date(Date.now() - 86400000 * 1) },
-    { id: 'exp2', text: "I was so anxious about a friend, and WinkDrop let me break the ice without making things awkward. They actually brought it up to me later (not knowing it was me) and we had a real conversation. So grateful for this tool.", timestamp: new Date(Date.now() - 86400000 * 3) }
+    // Fix: Use Firestore Timestamp for consistency.
+    { id: 'exp1', text: "Getting a Wink was a turning point. It made me realize I wasn't hiding my struggles as well as I thought, but also that someone cared enough to reach out. It gave me the courage to talk to a professional.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 86400000 * 1)) },
+    { id: 'exp2', text: "I was so anxious about a friend, and WinkDrop let me break the ice without making things awkward. They actually brought it up to me later (not knowing it was me) and we had a real conversation. So grateful for this tool.", timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 86400000 * 3)) }
 ];
 
 const MOCK_COMMUNITY_LOCATIONS = [
@@ -236,7 +242,8 @@ export const MOCK_COMMUNITY_WINKS: Wink[] = [
             OBSERVABLES[Math.floor(Math.random() * OBSERVABLES.length)],
             OBSERVABLES[Math.floor(Math.random() * OBSERVABLES.length)],
         ],
-        timestamp: new Date(Date.now() - Math.random() * 86400000 * 5), // within last 5 days
+        // Fix: Use Firestore Timestamp for consistency.
+        timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - Math.random() * 86400000 * 5)), // within last 5 days
         reactions: {
             support: Math.floor(Math.random() * 20),
             thinking: Math.floor(Math.random() * 15),
@@ -249,7 +256,8 @@ export const MOCK_SOCIAL_POSTS: SocialMediaPost[] = [
     {
         platform: 'X',
         content: 'Just got an anonymous WinkDrop. Whoever sent it, thank you. It means more than you know. A good reminder to check in with your people. 🙏 #thanksanonymous #mentalhealth',
-        timestamp: new Date(Date.now() - 3600000 * 6), // 6 hours ago
+        // Fix: Use Firestore Timestamp for consistency.
+        timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 3600000 * 6)), // 6 hours ago
         user: { name: 'User123', handle: '@anon_user', avatar: 'generic' },
         likes: 152,
         comments: 18,
@@ -257,7 +265,8 @@ export const MOCK_SOCIAL_POSTS: SocialMediaPost[] = [
     {
         platform: 'Instagram',
         content: 'It’s okay to not be okay. Someone reminded me of that today without even saying a word. Grateful for the silent support out there. We all need it sometimes. #thanksanonymous #youareseen #winkdrops',
-        timestamp: new Date(Date.now() - 86400000 * 1.5), // 1.5 days ago
+        // Fix: Use Firestore Timestamp for consistency.
+        timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 86400000 * 1.5)), // 1.5 days ago
         user: { name: 'CreativeSoul', handle: '@creative_soul', avatar: 'generic' },
         likes: 1280,
         comments: 94,
@@ -265,7 +274,8 @@ export const MOCK_SOCIAL_POSTS: SocialMediaPost[] = [
     {
         platform: 'TikTok',
         content: 'I never thought an anonymous message could make me cry in a good way. The resources were actually helpful. #thanksanonymous #selfcare #itgetsbetter',
-        timestamp: new Date(Date.now() - 86400000 * 2), // 2 days ago
+        // Fix: Use Firestore Timestamp for consistency.
+        timestamp: firebase.firestore.Timestamp.fromDate(new Date(Date.now() - 86400000 * 2)), // 2 days ago
         user: { name: 'PositiveVibes', handle: '@positivevibesonly', avatar: 'generic' },
         likes: 25400,
         comments: 782,
