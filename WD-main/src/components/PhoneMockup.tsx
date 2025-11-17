@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Icon } from './ui/Icon';
+import { Icon } from '@/ui/Icon';
 
 const MockupContent = ({ shouldScroll }: { shouldScroll: boolean }) => (
     <div 

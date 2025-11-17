@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Logo } from './ui/Logo';
-import { Icon } from './ui/Icon';
-import { Tooltip } from './ui/Tooltip';
+import { Logo } from '@/ui/Logo';
+import { Icon } from '@/ui/Icon';
+import { Tooltip } from '@/ui/Tooltip';
 
 interface OnboardingFlowProps {
   onComplete: () => void;

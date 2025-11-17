@@ -1,11 +1,7 @@
-
-
-
-
 import React, { useState } from 'react';
-import { Wink, Category, CommunityExperience, ReactionType, SocialMediaPost } from '../types';
-import { Icon } from './ui/Icon';
-import { CATEGORIES, REACTIONS, MOCK_SOCIAL_POSTS } from '../constants';
+import { Wink, Category, CommunityExperience, ReactionType, SocialMediaPost } from '@/types';
+import { Icon } from '@/ui/Icon';
+import { CATEGORIES, REACTIONS, MOCK_SOCIAL_POSTS } from '@/constants';
 
 const WINKS_PER_PAGE = 5;
 
@@ -13,7 +9,7 @@ interface CommunityFeedProps {
     winks: Wink[];
     experiences: CommunityExperience[];
     onReact: (winkId: string, reaction: ReactionType) => void;
-    onAddExperience: (experience: CommunityExperience) => void;
+    onAddExperience: (experience: Omit<CommunityExperience, 'id' | 'timestamp'>) => void;
 }
 
 const ShareExperienceCard: React.FC<{ onAddExperience: (text: string) => void }> = ({ onAddExperience }) => {
@@ -113,7 +109,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ winks, experiences
         const newExperience: Omit<CommunityExperience, 'id' | 'timestamp'> = {
             text,
         };
-        onAddExperience(newExperience as CommunityExperience);
+        onAddExperience(newExperience);
     };
 
     const filteredWinks = winks.filter(wink => 
@@ -128,8 +124,6 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({ winks, experiences
 
     const visibleWinks = filteredWinks.slice(0, visibleCount);
     
-    // Sort experiences newest first for display
-    // Fix: Use toMillis() for Timestamp comparison
     const sortedExperiences = [...experiences].sort((a,b) => b.timestamp.toMillis() - a.timestamp.toMillis());
 
     return (

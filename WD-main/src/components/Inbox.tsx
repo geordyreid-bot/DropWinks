@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { InboxItem, Wink, Nudge, SecondOpinionRequest, Contact, Page } from '../types';
-import { Icon } from './ui/Icon';
+import { InboxItem, Wink, Nudge, SecondOpinionRequest, Contact, Page } from '@/types';
+import { Icon } from '@/ui/Icon';
 import { WinkDetailView } from './WinkDetailView';
 import { SecondOpinionRequestView } from './SecondOpinionRequestView';
-import { Modal } from './ui/Modal';
-// Fix: Use firebase/compat/app for imports and types.
+import { Modal } from '@/ui/Modal';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 
@@ -56,7 +55,6 @@ const ItemCard: React.FC<{
 
     useEffect(() => {
         if (isExpanded && cardRef.current) {
-            // Use nearest to avoid scrolling if the item is already fully visible.
             cardRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest' });
         }
     }, [isExpanded]);

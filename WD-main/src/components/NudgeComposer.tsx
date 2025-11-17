@@ -1,13 +1,13 @@
-// Fix: Corrected typo in import statement for React and useState.
 import React, { useState } from 'react';
-import { Nudge, Page, Contact, ContactMethod, ScheduledNudge } from '../types';
-import { Icon } from './ui/Icon';
-import { Modal } from './ui/Modal';
-import { Tooltip } from './ui/Tooltip';
-import { SyncContactsModal } from './ui/SyncContactsModal';
-import { generateNudgeSuggestions } from '../services/geminiService';
-import { ContactEditModal } from './ui/ContactEditModal';
-import { ScheduleNudgeModal } from './ui/ScheduleNudgeModal';
+import { Nudge, Page, Contact, ContactMethod, ScheduledNudge } from '@/types';
+import { Icon } from '@/ui/Icon';
+import { Modal } from '@/ui/Modal';
+import { Tooltip } from '@/ui/Tooltip';
+import { SyncContactsModal } from '@/ui/SyncContactsModal';
+// FIX: Corrected import path from apiService to geminiService
+import { generateNudgeSuggestions } from '@/services/geminiService';
+import { ContactEditModal } from '@/ui/ContactEditModal';
+import { ScheduleNudgeModal } from '@/ui/ScheduleNudgeModal';
 
 interface NudgeComposerProps {
     onNudgeSent: (nudge: Omit<Nudge, 'id' | 'timestamp'>) => void;
@@ -16,7 +16,7 @@ interface NudgeComposerProps {
     contacts: Contact[];
     onDeleteContact: (contactId: string) => void;
     onToggleBlockContact: (contactId: string, isBlocked: boolean) => void;
-    onAddContacts: (newContacts: Contact[]) => void;
+    onAddContacts: (newContacts: Omit<Contact, 'id'>[]) => void;
     onEditContact: (contact: Contact) => void;
 }
 
@@ -47,7 +47,6 @@ const PREDEFINED_NUDGES = [
 
 const sources: ('All' | ContactMethod)[] = ['All', 'WinkDrops', 'Phone', 'Email', 'Instagram', 'X', 'Snapchat', 'TikTok'];
 
-// Helper for a simple fuzzy search
 const fuzzyMatch = (searchTerm: string, target: string): boolean => {
     const searchTermLower = searchTerm.toLowerCase();
     const targetLower = target.toLowerCase();
@@ -72,7 +71,6 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     
-    // AI Suggestion State
     const [aiContext, setAiContext] = useState('');
     const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -102,7 +100,7 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
             type: 'Nudge',
             recipient,
             message,
-            isRead: true, // Nudges are simple and marked as read for the sender
+            isRead: true, 
         };
         setTimeout(() => {
             onNudgeSent(newNudge);
@@ -150,7 +148,7 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
         try {
             const props = ['name', 'tel', 'email'];
             const opts = { multiple: true };
-            const deviceContacts = await (navigator.contacts as any).select(props, opts);
+            const deviceContacts = await (navigator as any).contacts.select(props, opts);
 
             if (deviceContacts.length > 0) {
                 const newContacts: Omit<Contact, 'id'>[] = deviceContacts.flatMap((contact: any) => {
@@ -172,7 +170,7 @@ export const NudgeComposer: React.FC<NudgeComposerProps> = ({ onNudgeSent, onAdd
                     return created;
                 });
 
-                onAddContacts(newContacts as Contact[]);
+                onAddContacts(newContacts);
                 alert(`${newContacts.length} contact(s) synced successfully!`);
             }
         } catch (err) {

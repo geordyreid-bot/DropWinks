@@ -1,9 +1,8 @@
-
-
 import React, { useState } from 'react';
-import { AIGeneratedContent, SocialMediaPost } from '../types';
-import { generateSocialPosts } from '../services/geminiService';
-import { Icon } from './ui/Icon';
+import { AIGeneratedContent, SocialMediaPost } from '@/types';
+// FIX: Corrected import path from apiService to geminiService
+import { generateSocialPosts } from '@/services/geminiService';
+import { Icon } from '@/ui/Icon';
 
 interface SocialPostGeneratorProps {
     aiContent: AIGeneratedContent;

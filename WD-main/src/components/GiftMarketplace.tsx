@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Page, GiftCardSuggestion } from '../types';
-import { Icon } from './ui/Icon';
-import { generateGiftCardIdeas } from '../services/geminiService';
+import { Page, GiftCardSuggestion } from '@/types';
+import { Icon } from '@/ui/Icon';
+// FIX: Corrected import path from apiService to geminiService
+import { generateGiftCardIdeas } from '@/services/geminiService';
 
 interface GiftMarketplaceProps {
     navigate: (page: Page) => void;

@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { LandingPage } from './components/pages/LandingPage';
 import { Dashboard } from './components/pages/Dashboard';
@@ -158,7 +159,8 @@ export const App: React.FC = () => {
 
     const showLocalNotification = useCallback((title: string, body: string, type: keyof NotificationSettings) => {
         if (!notificationSettings[type]) {
-            console.log(`Notification of type "${type}" is disabled by user settings.`);
+            // FIX: Explicitly convert `type` to a string to prevent potential runtime errors with symbols.
+            console.log(`Notification of type "${String(type)}" is disabled by user settings.`);
             return;
         }
 

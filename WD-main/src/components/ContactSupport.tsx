@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Page } from '../types';
-import { Icon } from './ui/Icon';
+import { Page } from '@/types';
+import { Icon } from '@/ui/Icon';
 
 interface ContactSupportProps {
     navigate: (page: Page) => void;

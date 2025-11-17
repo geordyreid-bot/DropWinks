@@ -1,8 +1,6 @@
-
-
 import React, { useState } from 'react';
-import { SecondOpinionRequest } from '../types';
-import { Icon } from './ui/Icon';
+import { SecondOpinionRequest } from '@/types';
+import { Icon } from '@/ui/Icon';
 
 interface SecondOpinionRequestViewProps {
     request: SecondOpinionRequest;

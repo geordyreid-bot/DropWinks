@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Contact } from '../types';
-import { Icon } from './ui/Icon';
+import { Contact } from '@/types';
+import { Icon } from '@/ui/Icon';
 
 interface SecondOpinionComposerProps {
     onClose: () => void;

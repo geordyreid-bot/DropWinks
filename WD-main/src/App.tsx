@@ -1,14 +1,11 @@
-
-
 import React, { useState, useCallback, useEffect } from 'react';
-import { LandingPage } from './components/pages/LandingPage';
-import { Dashboard } from './components/pages/Dashboard';
-import { Wink, Nudge, Page, InboxItem, Contact, ReactionType, CommunityExperience, SecondOpinionRequest, NotificationSettings, ForumMessage, ScheduledNudge } from './types';
-import { MOCK_INBOX, MOCK_OUTBOX, MOCK_COMMUNITY_WINKS, MOCK_COMMUNITY_EXPERIENCES, MOCK_CONTACTS, findObservableById, MOCK_FORUMS } from './constants';
-import { TermsGate } from './components/ui/TermsGate';
-import { OnboardingFlow } from './components/OnboardingFlow';
-import { auth, messaging } from './firebase';
-// Fix: Use firebase/compat/app for imports and types.
+import { LandingPage } from '@/pages/LandingPage';
+import { Dashboard } from '@/pages/Dashboard';
+import { Wink, Nudge, Page, InboxItem, Contact, ReactionType, CommunityExperience, SecondOpinionRequest, NotificationSettings, ForumMessage, ScheduledNudge } from '@/types';
+import { MOCK_INBOX, MOCK_OUTBOX, MOCK_COMMUNITY_WINKS, MOCK_COMMUNITY_EXPERIENCES, MOCK_CONTACTS, MOCK_FORUMS } from '@/constants';
+import { TermsGate } from '@/ui/TermsGate';
+import { OnboardingFlow } from '@/components/OnboardingFlow';
+import { auth, messaging } from '@/firebase';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
@@ -45,7 +42,6 @@ export const App: React.FC = () => {
     const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
         return typeof window !== 'undefined' && window.localStorage.getItem('winkdrops_onboarding_completed') === 'true';
     });
-    // Fix: Use firebase.User type from compat library.
     const [user, setUser] = useState<firebase.User | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState<Page>('Dashboard');
@@ -55,10 +51,6 @@ export const App: React.FC = () => {
     const [communityExperiences, setCommunityExperiences] = useState<CommunityExperience[]>(MOCK_COMMUNITY_EXPERIENCES);
     const [forums, setForums] = useState<Record<string, ForumMessage[]>>(MOCK_FORUMS);
     
-    // Note on "Best Practices": This app uses localStorage for simplicity and to maintain user privacy
-    // as outlined in the Privacy Policy (no data is sent to a server).
-    // For features like cross-device sync, a cloud database like Firestore would be the next step.
-    // The app is already configured with `enableFirebase: true` in metadata.json to facilitate this.
     const [contacts, setContacts] = useState<Contact[]>(() => {
         if (typeof window === 'undefined') {
             return MOCK_CONTACTS;
@@ -87,12 +79,10 @@ export const App: React.FC = () => {
     const [scheduledNudges, setScheduledNudges] = useState<ScheduledNudge[]>(() => {
         if (typeof window === 'undefined') return [];
         const saved = window.localStorage.getItem('winkdrops_scheduled_nudges');
-        // We need to convert ISO strings back to Timestamp-like objects for consistency
         if (saved) {
             const parsed = JSON.parse(saved);
             return parsed.map((sn: any) => ({
                 ...sn,
-                // Fix: Use firebase.firestore.Timestamp from compat library.
                 sendAt: firebase.firestore.Timestamp.fromDate(new Date(sn.sendAt)),
             }));
         }
@@ -109,12 +99,10 @@ export const App: React.FC = () => {
     });
 
     useEffect(() => {
-        // Fix: Use compat syntax for onAuthStateChanged.
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             setUser(currentUser);
             setIsAuthLoading(false);
         });
-        // Cleanup subscription on unmount
         return () => unsubscribe();
     }, []);
 
@@ -138,7 +126,6 @@ export const App: React.FC = () => {
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            // Convert Timestamp to ISO string for JSON serialization
             const serializableNudges = scheduledNudges.map(sn => ({
                 ...sn,
                 sendAt: sn.sendAt.toDate().toISOString(),
@@ -158,7 +145,8 @@ export const App: React.FC = () => {
 
     const showLocalNotification = useCallback((title: string, body: string, type: keyof NotificationSettings) => {
         if (!notificationSettings[type]) {
-            console.log(`Notification of type "${type}" is disabled by user settings.`);
+            // FIX: Explicitly convert `type` to a string to prevent potential runtime errors with symbols.
+            console.log(`Notification of type "${String(type)}" is disabled by user settings.`);
             return;
         }
 
@@ -179,13 +167,11 @@ export const App: React.FC = () => {
         }
     }, []);
 
-    // Handle foreground push notifications
     useEffect(() => {
         if (messaging) {
             const unsubscribe = firebase.messaging().onMessage(payload => {
                 console.log('Foreground push notification received:', payload);
                 const title = payload.notification?.title || 'New WinkDrop';
-                // The type is needed for the notification settings check
                 const type = (payload.data?.type as keyof NotificationSettings) || 'newWink';
                 const body = payload.notification?.body || "You've received a new update.";
                 showLocalNotification(title, body, type);
@@ -197,8 +183,6 @@ export const App: React.FC = () => {
         }
     }, [showLocalNotification]);
 
-
-    // Check subscription status on load using FCM token
     useEffect(() => {
         if (!('serviceWorker' in navigator) || !messaging) {
             console.warn('Push messaging is not supported or Firebase is not configured.');
@@ -227,7 +211,6 @@ export const App: React.FC = () => {
         checkSubscription();
     }, []);
 
-    // Subscribe to push notifications using Firebase Cloud Messaging
     const handleNotificationSubscribe = useCallback(async () => {
         if (!messaging || !('Notification' in window)) {
             alert('Push notifications are not supported on this browser or Firebase is not configured.');
@@ -266,8 +249,7 @@ export const App: React.FC = () => {
     }, [notificationPermission]);
 
     const addWinkToOutbox = useCallback((wink: Omit<Wink, 'id' | 'timestamp'>) => {
-        // Fix: Use firebase.firestore.Timestamp from compat library.
-        const newWink = { ...wink, id: `wink-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
+        const newWink: Wink = { ...wink, id: `wink-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
         setOutbox(prev => [newWink, ...prev]);
         showLocalNotification(
             `A new Wink for ${wink.recipient} is ready.`,
@@ -276,8 +258,7 @@ export const App: React.FC = () => {
     }, [showLocalNotification]);
 
     const addNudgeToOutbox = useCallback((nudge: Omit<Nudge, 'id' | 'timestamp'>) => {
-        // Fix: Use firebase.firestore.Timestamp from compat library.
-        const newNudge = { ...nudge, id: `nudge-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
+        const newNudge: Nudge = { ...nudge, id: `nudge-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
         setOutbox(prev => [newNudge, ...prev]);
         showLocalNotification(
             `A new Nudge for ${nudge.recipient} has been sent.`,
@@ -285,7 +266,6 @@ export const App: React.FC = () => {
         , 'newNudge');
     }, [showLocalNotification]);
     
-    // Nudge Scheduling Logic
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date();
@@ -295,11 +275,10 @@ export const App: React.FC = () => {
                 const sendAt = sn.sendAt.toDate();
                 if (sendAt <= now) {
                     hasChanged = true;
-                    // Pass the base nudge object, not the full scheduled nudge
                     addNudgeToOutbox(sn.nudge);
 
                     if (sn.recurrence === 'none') {
-                        return []; // Remove from list
+                        return []; 
                     } else {
                         const nextSendAt = new Date(sendAt);
                         switch(sn.recurrence) {
@@ -307,17 +286,16 @@ export const App: React.FC = () => {
                             case 'weekly': nextSendAt.setDate(nextSendAt.getDate() + 7); break;
                             case 'monthly': nextSendAt.setMonth(nextSendAt.getMonth() + 1); break;
                         }
-                        // Fix: Use firebase.firestore.Timestamp from compat library.
                         return [{ ...sn, sendAt: firebase.firestore.Timestamp.fromDate(nextSendAt) }];
                     }
                 }
-                return [sn]; // Keep in list
+                return [sn];
             });
 
             if (hasChanged) {
                 setScheduledNudges(updatedNudges);
             }
-        }, 30000); // Check every 30 seconds
+        }, 30000);
 
         return () => clearInterval(interval);
     }, [scheduledNudges, addNudgeToOutbox]);
@@ -326,7 +304,6 @@ export const App: React.FC = () => {
     const addScheduledNudge = useCallback((nudge: Omit<Nudge, 'id' | 'timestamp'>, sendAt: Date, recurrence: ScheduledNudge['recurrence']) => {
         const newScheduledNudge: ScheduledNudge = {
             id: `sched-${Date.now()}`,
-            // Fix: Use firebase.firestore.Timestamp from compat library.
             nudge: { ...nudge, id: `nudge-sched-${Date.now()}`, timestamp: firebase.firestore.Timestamp.fromDate(sendAt) },
             sendAt: firebase.firestore.Timestamp.fromDate(sendAt),
             recurrence,
@@ -344,7 +321,6 @@ export const App: React.FC = () => {
         
         setCommunityWinks(winks => winks.map(wink => {
             if (wink.id === winkId) {
-                // If this community wink matches one in our outbox, simulate the original sender getting a notification.
                 if (outboxWink && outboxWink.type === 'Wink') {
                     showLocalNotification('Your Wink was seen!', `Someone reacted to your Wink for ${outboxWink.recipient}.`, 'communityReaction');
                 }
@@ -357,8 +333,7 @@ export const App: React.FC = () => {
     }, [showLocalNotification, outbox]);
 
     const addCommunityExperience = useCallback((experience: Omit<CommunityExperience, 'id'| 'timestamp'>) => {
-        // Fix: Use firebase.firestore.Timestamp from compat library.
-        const newExperience = { ...experience, id: `exp-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
+        const newExperience: CommunityExperience = { ...experience, id: `exp-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
         setCommunityExperiences(prev => [newExperience, ...prev]);
     }, []);
 
@@ -395,11 +370,6 @@ export const App: React.FC = () => {
         setContacts(prev => prev.map(c => c.id === updatedContact.id ? updatedContact : c));
     }, []);
 
-    /**
-     * A centralized helper to apply updates to a Wink, whether it's in the inbox or outbox.
-     * @param winkId The ID of the Wink to update.
-     * @param updateFn A function that takes the current Wink and returns the updated Wink.
-     */
     const updateWinkInCollections = useCallback((
         winkId: string,
         updateFn: (wink: Wink) => Wink
@@ -427,7 +397,6 @@ export const App: React.FC = () => {
             winkId: wink!.id,
             originalRecipientName: wink!.recipient,
             winkObservables: wink!.observables,
-            // Fix: Use firebase.firestore.Timestamp from compat library.
             timestamp: firebase.firestore.Timestamp.now(),
             isRead: false,
         }));
@@ -472,7 +441,6 @@ export const App: React.FC = () => {
         setOutbox(prev => prev.map(item => {
             if (item.id === winkId && item.type === 'Wink') {
                 recipientName = item.recipient;
-                // Fix: Use firebase.firestore.Timestamp from compat library.
                 const newUpdates = updateTexts.map(text => ({ text, timestamp: firebase.firestore.Timestamp.now() }));
                 const existingUpdates = item.updates || [];
                 return {
@@ -489,7 +457,6 @@ export const App: React.FC = () => {
         );
     }, [showLocalNotification]);
 
-    // Forum and Follower logic
     const handleFollow = useCallback((type: 'forum' | 'user', id: string) => {
         if (type === 'forum') {
             setFollowedForums(prev => [...new Set([...prev, id])]);
@@ -507,14 +474,12 @@ export const App: React.FC = () => {
     }, []);
 
     const handleAddForumMessage = useCallback((forumId: string, message: Omit<ForumMessage, 'id' | 'timestamp'>) => {
-        // Fix: Use firebase.firestore.Timestamp from compat library.
-        const newMessage = { ...message, id: `msg-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
+        const newMessage: ForumMessage = { ...message, id: `msg-${Date.now()}`, timestamp: firebase.firestore.Timestamp.now() };
         setForums(prev => ({
             ...prev,
             [forumId]: [...(prev[forumId] || []), newMessage]
         }));
         
-        // Simulate notifications
         if (followedForums.includes(forumId)) {
             showLocalNotification('New Forum Message', `Someone posted in the "${forumId}" forum.`, 'newForumMessage');
         }
@@ -536,7 +501,6 @@ export const App: React.FC = () => {
     };
     
     const handleLogout = () => {
-        // Fix: Use compat syntax for signOut.
         auth.signOut().catch(error => console.error('Logout Error:', error));
     };
 

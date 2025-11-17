@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Modal } from './ui/Modal';
-import { Icon } from './ui/Icon';
+import { Modal } from '@/ui/Modal';
+import { Icon } from '@/ui/Icon';
 
 interface AppTutorialProps {
     isOpen: boolean;
